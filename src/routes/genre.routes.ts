@@ -1,14 +1,10 @@
-import { authenticate } from "../middleware/auth.middleware";
 import { Router } from "express";
-import { getAllGenre, createGenre, removeGenre, getSongsByGenre } from "../controllers/genre.category.controller";
+import { getAllGenre, createGenre, removeGenre, getSongsByGenre } from "../controllers/genre.controller";
 import { validateBody } from "../middleware/zod.middleware";
 import { CreateGenreCategoryValidator } from "../zod/genre.category.validator";
+import { paginationSchema } from "../zod/pagenation.validator";
 const router = Router();
 
-router.use(authenticate)
-router.get('/get-all', getAllGenre);
-router.post('/create', validateBody(CreateGenreCategoryValidator), createGenre);
-router.delete('/delete/:genre_id', removeGenre);
-router.get('/songs/:genre_id', getSongsByGenre);
-
+router.get('/get-all',validateBody(paginationSchema), getAllGenre);
+router.get('/songs/:genre_id',validateBody(paginationSchema), getSongsByGenre);
 export default router;

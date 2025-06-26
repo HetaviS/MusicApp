@@ -45,7 +45,6 @@ const generalResponse = <T>(
     success,
     message,
     data,
-    statusCode
   });
 };
 

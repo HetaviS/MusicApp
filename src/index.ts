@@ -2,18 +2,8 @@ import { app } from './app';
 import { logger } from './utils';
 import { initializeSocketIO } from './socket';
 import { config } from './config';
-// import index_routes from './routes/index.routes';
-import bodyParser from 'body-parser';
 import { initializeDatabase } from './config/database';
 import { setupAssociations } from './models/associations';
-
-
-// Body parsing middleware
-app.use(bodyParser.json({ limit: '10mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
-
-// Register routes AFTER middleware setup
-// app.use('/api', index_routes);
 
 
 // Start the server

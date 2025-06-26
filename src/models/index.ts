@@ -8,8 +8,9 @@ import { Favourites } from './favourites';
 import { Downloads } from './downloads';
 import { Categories } from './categories';
 import { Avatar } from './avatar';
-// Setup associations after all models are defined
-
+import { HomeBlocks } from './homeBlocks';
+import { Movie } from './movie';
+import { MovieSongConnection } from './movieSongConnetion';
 export {
     User,
     Song,
@@ -20,5 +21,8 @@ export {
     Categories,
     Favourites,
     Downloads,
-    Avatar
+    Avatar,
+    HomeBlocks,
+    Movie,
+    MovieSongConnection
 };

@@ -14,4 +14,4 @@ router.put('/update-current-song', validateBody(updateCurrentSongSchema), update
 router.get('/history', userHistory); // Uncomment if you have a history controller
 router.put('/update-song-time', validateBody(updateSongTimeSchema), updateSongTime); // Uncomment if you have a song time update controller
 
-export default router;  
+export default router;

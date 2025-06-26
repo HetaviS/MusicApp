@@ -8,6 +8,7 @@ const Genre = sequelize.define('Genre', {
         autoIncrement: true,
     },
     name: { type: DataTypes.STRING },
+    is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false },
 }, {
     tableName: 'genres',
     timestamps: true,

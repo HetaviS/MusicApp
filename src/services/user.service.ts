@@ -15,7 +15,13 @@ async function getUser(data: Partial<IUser>): Promise<IUser | null> {
             ]
         });
         if (!user) return null;
-        return user.toJSON() as IUser;
+        return removeExtraFields(user.toJSON(), [
+            'password',
+            'otp',
+            'current_song_time',
+            'current_song_id',
+            'current_album_id'
+        ]) as IUser;
     } catch (err) {
         throw err;
     }
@@ -41,13 +47,5 @@ async function updateUser(data: Partial<IUser>, where: Partial<IUser>): Promise<
     }
 }
 
-async function getAllUsersList() {
-    try {
-        const users = await User.findAll();
-        return users.map(user => removeExtraFields(user.toJSON(), ['password', 'otp', 'current_song_time', 'current_song_id', 'current_album_id']) as IUser);
-    } catch (err) {
-        throw err;
-    }
-}
 
-export default { getUser, createUser, updateUser, getAllUsersList };
+export default { getUser, createUser, updateUser };

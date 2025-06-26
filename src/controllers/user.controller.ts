@@ -5,6 +5,7 @@ import removeExtraFields from "../services/common/removeExtraFields.service";
 import * as fs from 'fs';
 import { getAvatar } from "../services/avatar.service";
 import { config } from "../config";
+import { log } from "console"
 
 
 async function getUser(req: Request, res: Response) {
@@ -26,17 +27,15 @@ async function getUser(req: Request, res: Response) {
  */
 async function updateUser(req: Request, res: Response) {
     try {
-        if (req.body.is_singer) {
-            req.body.is_singer = req.body.is_singer.toLowerCase() == 'true' ? true : false;
-        }
-        let user = await user_service.getUser({ user_id: req.user.user_id });
+        const userId = req.params.artist_id || req.user.user_id;
+        let user = await user_service.getUser({ user_id: userId });
 
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
         if (files?.['profile_pic']) {
             req.body.profile_pic = files['profile_pic'][0].path
             if (user?.profile_pic && !user?.profile_pic?.includes('default_profile_pics')) {
                 const pic = user.profile_pic.replace(config.clientUrl, '')
-                fs.unlinkSync(pic || '');
+                fs.existsSync(pic) && fs.unlinkSync(pic);
             }
         }
         else if (req.body.avatar_id) {
@@ -44,10 +43,10 @@ async function updateUser(req: Request, res: Response) {
             req.body.profile_pic = avatar?.path.replace(config.clientUrl, '');
             if (user?.profile_pic && !user?.profile_pic?.includes('default_profile_pics')) {
                 const pic = user.profile_pic.replace(config.clientUrl, '')
-                fs.unlinkSync(pic || '');
+                fs.existsSync(pic) && fs.unlinkSync(pic);
             }
         }
-        user = await user_service.updateUser(req.body, { user_id: req.user.user_id });
+        user = await user_service.updateUser(req.body, { user_id: userId });
         return response_service.successResponse(res, 'User updated successfully.', removeExtraFields(user, ['otp', 'login_verification_status', 'login_type', 'is_admin', 'device_token']));
 
     } catch (err: any) {

@@ -20,6 +20,8 @@ interface Config {
   email_user: string;
   email_pass: string;
   frontend_url: string;
+  db_username:string;
+  db_password:string
 }
 
 export const config: Config = {
@@ -39,6 +41,8 @@ export const config: Config = {
   email_user: process.env.EMAIL_USER || "hetavi.primocys@gmail.com",
   email_pass: process.env.EMAIL_PAAS || "oizq evlo gpfj mfjo",
   frontend_url: process.env.FRONTEND_URL || "http://localhost:3000",
+  db_username:process.env.DB_USERNAME || "postgres",
+  db_password:process.env.DB_PASSWORD || "hetu"
 };
 
 // Database configuration

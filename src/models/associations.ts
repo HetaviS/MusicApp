@@ -6,7 +6,7 @@ import { AlbumSongs } from './albumSong';
 import { Genre } from './genre';
 import { Favourites } from './favourites';
 import { Downloads } from './downloads';
-import { Categories } from './categories';
+// import { Categories } from './categories';
 import { History } from './history';
 
 // Define all associations here after all models are imported
@@ -83,10 +83,10 @@ export const setupAssociations = () => {
         as: 'genre',
     });
 
-    Song.belongsTo(Categories, {
-        foreignKey: 'category_id',
-        as: 'category',
-    });
+    // Song.belongsTo(Categories, {
+    //     foreignKey: 'category_id',
+    //     as: 'category',
+    // });
 
     // MusicSinger belongs to User (the artist)
     MusicSinger.belongsTo(User, {
@@ -130,10 +130,10 @@ export const setupAssociations = () => {
         as: 'songs',
     });
 
-    Categories.hasMany(Song, {
-        foreignKey: 'category_id',
-        as: 'songs',
-    });
+    // Categories.hasMany(Song, {
+    //     foreignKey: 'category_id',
+    //     as: 'songs',
+    // });
 
     History.belongsTo(User, {
         foreignKey: 'user_id',
@@ -162,4 +162,5 @@ export const setupAssociations = () => {
         as: 'history',
     });
 
+        
 };

@@ -22,6 +22,7 @@ export interface IUser {
     is_singer: boolean;
     mobile_number: string;
     country_code: string;
+    is_deleted?: boolean;
 }
 
 export interface ISong {
@@ -129,6 +130,24 @@ export interface IAdmin {
     profile_pic: string;
     gender: string;
     dob: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export interface IHomeBlocks {
+    block_id: string;
+    type: string; // e.g., 'artist', 'album', 'song','artist'
+    title: string;
+    description: string;
+    albums?: IAlbum[]; // Assuming albums is an array of album objects
+    songs?: ISong[]; // Assuming songs is an array of song objects
+    genres?: IGenre[]; // Assuming genres is an array of genre objects
+    artists?: IMusicSinger[]; // Assuming artists is an array of artist objects
+    album_ids: number[];
+    song_ids: number[];
+    genre_ids: number[];
+    artist_ids?: number[]; // Assuming artist_ids is an array of artist IDs
+    is_deleted: boolean;
     createdAt?: Date;
     updatedAt?: Date;
 }

@@ -10,7 +10,7 @@ export async function verifyAdmin(req: Request, res: Response) {
         const data = req.body as Partial<IAdmin>;
         const admin = await admin_service.verifyAdmin(data);
         if (!admin) return response_service.notFoundResponse(res, 'Admin not found.');
-        const token = await tokenService.generateAdminToken(admin);
+        const token = await tokenService.generateAdminToken({admin_id:admin.admin_id});
         return response_service.successResponse(res, 'Admin verified successfully.', { ...await removeExtraFields(admin, ['password']), token });
     } catch (err: any) {
         logger.error('Error verifying admin:', err);

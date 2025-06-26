@@ -1,7 +1,8 @@
 
 import { Sequelize } from 'sequelize';
+import { config } from '.';
 
-export const sequelize = new Sequelize('music_app', 'postgres', 'hetu', {
+export const sequelize = new Sequelize('music_app', config.db_username, config.db_password, {
   host: 'localhost',
   dialect: 'postgres',
   port: 5432,
@@ -18,7 +19,7 @@ export const initializeDatabase = async () => {
     await import('../models');
 
     // Sync database (creates tables if they don't exist)
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: true});
     console.log('✅ Database synchronized successfully.');
   } catch (err) {
     console.error('❌ Unable to connect to the database:', err);

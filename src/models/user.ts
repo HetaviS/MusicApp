@@ -7,19 +7,24 @@ const User = sequelize.define('User', {
     user_id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     full_name: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
     username: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
-    email: { type: DataTypes.STRING, allowNull: false, unique: true },
+    email: { type: DataTypes.STRING, allowNull: true, unique: true },
     otp: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
-    login_type: { type: DataTypes.ENUM('email', 'social'), allowNull: false },
+    login_type: { type: DataTypes.ENUM('email', 'mobile','google','apple'), allowNull: false, defaultValue: "email" },
     profile_pic: {
-        type: DataTypes.STRING, get: function () {
+        type: DataTypes.STRING,
+        get: function () {
             if (this.getDataValue('profile_pic')) {
                 return config.clientUrl + this.getDataValue('profile_pic');
             }
-        }
+            else {
+                return '';
+            }
+        },
+        allowNull: false, defaultValue: ""
     },
-    gender: { type: DataTypes.STRING },
-    dob: { type: DataTypes.STRING },
-    device_token: { type: DataTypes.STRING },
+    gender: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
+    dob: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
+    device_token: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
     login_verification_status: { type: DataTypes.BOOLEAN, defaultValue: false },
     is_admin: { type: DataTypes.BOOLEAN, defaultValue: false },
     is_singer: { type: DataTypes.BOOLEAN, defaultValue: false },
@@ -27,6 +32,7 @@ const User = sequelize.define('User', {
     current_song_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
+        // defaultValue: ,
         references: {
             model: 'songs',
             key: 'song_id'
@@ -37,6 +43,7 @@ const User = sequelize.define('User', {
     current_album_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
+        // defaultValue: "",
         references: {
             model: 'albums',
             key: 'album_id'
@@ -44,11 +51,13 @@ const User = sequelize.define('User', {
         onDelete: 'SET NULL',
         onUpdate: 'CASCADE'
     },
-    mobile_number: { type: DataTypes.STRING, allowNull: true },
-    country_code: { type: DataTypes.STRING, allowNull: true },
+    mobile_number: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
+    country_code: { type: DataTypes.STRING, allowNull: false, defaultValue: "" },
+    is_deleted: { type: DataTypes.BOOLEAN, defaultValue: false }
 }, {
     tableName: 'users',
     timestamps: true,
 });
 
 export { User };
+ 

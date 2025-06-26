@@ -1,3 +1,4 @@
+import { log } from 'console';
 import { logger } from '../utils';
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
@@ -51,7 +52,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
             }
             break;
         case 'thumbnail':
-            allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
             if (allowedImageTypes.includes(file.mimetype)) {
                 cb(null, true);
             } else {
@@ -59,7 +60,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
             }
             break;
         case 'album_thumbnail':
-            allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
             if (allowedImageTypes.includes(file.mimetype)) {
                 cb(null, true);
             } else {
@@ -67,10 +68,12 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
             }
             break;
         case 'profile_pic':
-            allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
             if (allowedImageTypes.includes(file.mimetype)) {
                 cb(null, true);
+                log(file.mimetype,'file.mimetype');
             } else {
+                log(file.mimetype,'file.mimetype');
                 cb(new Error('Invalid image file type.'));
             }
             break;
@@ -99,7 +102,7 @@ export const uploadDocs = (req: Request, res: Response, next: NextFunction) => {
         { name: 'album_thumbnail', maxCount: 1 },
         { name: 'profile_pic', maxCount: 1 }
     ]);
-
+    // log(uploadFields);
     uploadFields(req, res, (err: any) => {
         if (err instanceof multer.MulterError) {
             logger.error('Multer error:', err);

@@ -1,5 +1,6 @@
 import { Album, AlbumSongs, Song } from "../models";
 import { IAlbum, ISong } from "../types";
+        import { fn, col, literal, Sequelize } from 'sequelize';
 
 async function createAlbum(albumPayload: Partial<IAlbum>): Promise<IAlbum | null> {
     try {
@@ -62,4 +63,36 @@ async function getAlbum(where: Partial<IAlbum>): Promise<IAlbum | null> {
     }
 }
 
-export default { createAlbum, addSongsToAlbum, removeSongsFromAlbum, updateAlbum, getAlbum };
+async function getAllAlbums(where: Partial<IAlbum> = {}, page: number = 1, pageSize: number = 10): Promise<IAlbum[]> {
+    try {
+        const offset = (page - 1) * pageSize;
+        const albums = await Album.findAll({
+            where: { ...where },
+            limit: pageSize,
+            offset,
+            attributes: {
+                include: [
+                [Sequelize.fn('COUNT', Sequelize.col('songs.song_id')), 'song_count']
+                ]
+            },
+            include: [
+                {
+                model: AlbumSongs,
+                as: 'songs',
+                attributes: [], // Don't fetch song data, just use for count
+                required: false
+                }
+            ],
+            group: ['Album.album_id'], // Only primary key here
+            subQuery: false // Avoids subquery wrapping issue
+        });
+
+
+        return albums.map(album => album.toJSON() as IAlbum);
+    }
+    catch (err) {
+        throw err;
+    }
+}
+
+export default { createAlbum, addSongsToAlbum, removeSongsFromAlbum, updateAlbum, getAlbum ,getAllAlbums};

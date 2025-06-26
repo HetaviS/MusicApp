@@ -5,12 +5,21 @@ import bodyParser from 'body-parser';
 import indexRoutes from './routes/index.routes';
 
 const app: Application = express();
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
 app.use('/uploads', express.static('uploads'));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser());
 
+// Middleware to handle CORS
+app.use((req: Request, res: Response, next: NextFunction) => {
+    res.header('Access-Control-Allow-Origin', '*'); // Allow all origins
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allow specific headers
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(204); // Respond to preflight requests
+    }
+    next(); // Proceed to the next middleware or route handler
+});
 // Routes
 app.use('/api', indexRoutes);
 

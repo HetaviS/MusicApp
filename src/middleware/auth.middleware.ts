@@ -18,6 +18,9 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         }
 
         const { user_id } = token_service.verifyToken(token);
+        if (!user_id) {
+            throw new Error();
+        }
         const user = await user_service.getUser({ user_id: user_id });
         if (!user) {
             throw new Error();

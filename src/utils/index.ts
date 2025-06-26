@@ -1,3 +1,3 @@
-export { generateOTP, sendEmailOTP } from './email';
+export { generateOTP, sendEmailOTP } from './otp';
 export { logger, stream } from './logger';
 

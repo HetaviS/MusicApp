@@ -4,6 +4,7 @@ import removeExtraFields from "../services/common/removeExtraFields.service";
 import { Request, Response } from 'express';
 import { logger } from "../utils";
 import { config } from "../config";
+import fs from 'fs'
 
 async function getSong(req: Request, res: Response) {
     try {
@@ -49,9 +50,7 @@ async function setDownloaded(req: Request, res: Response) {
 
 async function getMySongs(req: Request, res: Response) {
     try {
-        const user = req.user;
-        if (!user.is_singer) return response_service.badRequestResponse(res, 'You are not an artist.');
-        const songs = await singer_service.mySongs(user.user_id);
+        const songs = await singer_service.mySongs(parseInt(req.params.artistId), req.body.page, req.body.limit);
         if (songs) {
             return response_service.successResponse(res, 'Songs fetched successfully.', songs);
         }
@@ -64,8 +63,6 @@ async function getMySongs(req: Request, res: Response) {
 
 async function createMusic(req: Request, res: Response) {
     try {
-        const user = req.user;
-        if (!user.is_singer) return response_service.badRequestResponse(res, 'You are not an artist.');
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
         if (!files || !files['thumbnail'] || !files['audio']) return response_service.badRequestResponse(res, 'Audio and thumbnail are required.');
         const audio = files['audio'][0];
@@ -74,8 +71,13 @@ async function createMusic(req: Request, res: Response) {
         if (!audio || !thumbnail) return response_service.badRequestResponse(res, 'Audio and thumbnail are required.');
         let song = await singer_service.addSong({ category_id: req.body.category_id, genre_id: req.body.genre_id, audio: audio.path, thumbnail: thumbnail.path, title: req.body.title, duration: (duration).toString() });
         if (song) {
-            await singer_service.addSongToArtist(parseInt(song.song_id), user.user_id);
-            song = await song_service.getSong(parseInt(song.song_id));
+            const artist_ids = req.body.artist_ids;
+            artist_ids.forEach(async(artist_id: string) => {
+                const is_singer = await singer_service.isSinger(parseInt(artist_id));
+                if(is_singer) {
+                    await singer_service.addSongToArtist(parseInt(song?.song_id), parseInt(artist_id));
+                }
+            });
             return response_service.successResponse(res, 'Music added successfully.', removeExtraFields(song, ['genre_id']));
         }
         return response_service.badRequestResponse(res, 'Failed to add song.');
@@ -87,12 +89,10 @@ async function createMusic(req: Request, res: Response) {
 
 async function updateSong(req: Request, res: Response) {
     try {
-        const user = req.user;
-        if (!user.is_singer) return response_service.badRequestResponse(res, 'You are not an artist.');
+       
         const songId = parseInt(req.params.song_id);
         const song = await song_service.getSong(songId);
         if (!song) return response_service.notFoundResponse(res, 'Song not found.');
-        if (song.artists?.[0]?.user_id !== user.user_id) return response_service.forbiddenResponse(res, 'You are not the owner of this song.');
 
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
         let updatedData: any = { ...req.body };
@@ -103,18 +103,16 @@ async function updateSong(req: Request, res: Response) {
             const duration = await getAudioDuration(updatedData.audio);
             updatedData.duration = duration.toString();
             if (song.audio) {
-                require('fs').unlink(song.audio.replace(config.clientUrl, ''), (err: any) => {
-                    if (err) logger.error('Error deleting old song audio:', err);
-                });
+                fs.existsSync(song.audio.replace(config.clientUrl, '')) &&
+                fs.unlinkSync(song.audio.replace(config.clientUrl, ''));
             }
         }
 
         if (files && files['thumbnail']) {
             updatedData.thumbnail = files['thumbnail'][0].path;
             if (song.thumbnail) {
-                require('fs').unlink(song.thumbnail.replace(config.clientUrl, ''), (err: any) => {
-                    if (err) logger.error('Error deleting old song thumbnail:', err);
-                });
+                fs.existsSync(song.thumbnail.replace(config.clientUrl, '')) &&
+                fs.unlinkSync(song.thumbnail.replace(config.clientUrl, ''));
             }
         }
 
