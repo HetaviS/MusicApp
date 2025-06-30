@@ -34,6 +34,7 @@ export interface ISong {
     artists?: IMusicSinger[]; // Assuming singer is a string, could be an ObjectId or reference to another model
     category_id: string;
     duration: string;
+    movie?: IMovie;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -148,6 +149,17 @@ export interface IHomeBlocks {
     genre_ids: number[];
     artist_ids?: number[]; // Assuming artist_ids is an array of artist IDs
     is_deleted: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+
+export interface IMovie {
+    movie_id: string;
+    title: string;
+    description: string;
+    poster: string;
+    songs?: ISong[];
     createdAt?: Date;
     updatedAt?: Date;
 }

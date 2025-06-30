@@ -9,6 +9,7 @@ import avatar_routes from './avatar.routes';
 import home_routes from './home.routes';
 import artist_routes from './artist.auth.routes';
 import explore_routes from './explore.routes';
+import movie_routes from './movie.routes';
 import { uploadDocs } from '../middleware/upload.middleware';
 
 const router = Router();
@@ -25,5 +26,6 @@ router.use('/avatar', avatar_routes);
 router.use('/home', home_routes);
 router.use('/artist', artist_routes);
 router.use('/explore', explore_routes);
+router.use('/movie', movie_routes);
 
 export default router;

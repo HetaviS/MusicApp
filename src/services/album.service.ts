@@ -1,6 +1,6 @@
-import { Album, AlbumSongs, Song } from "../models";
+import { Album, AlbumSongs } from "../models";
 import { IAlbum, ISong } from "../types";
-        import { fn, col, literal, Sequelize } from 'sequelize';
+import {Sequelize } from 'sequelize';
 
 async function createAlbum(albumPayload: Partial<IAlbum>): Promise<IAlbum | null> {
     try {
@@ -43,17 +43,10 @@ async function updateAlbum(albumPayload: Partial<IAlbum>, where: Partial<IAlbum>
     }
 }
 
-async function getAlbum(where: Partial<IAlbum>): Promise<IAlbum | null> {
+async function getAlbum(where: Partial<IAlbum>, include?: any): Promise<IAlbum | null> {
     try {
         const album = await Album.findOne({
-            where: where, include: [{
-                model: AlbumSongs,
-                as: 'songs',
-                include: [{
-                    model: Song,
-                    as: 'song',
-                }]
-            }]
+            where: where, include
         });
         if (!album) return null;
         return album.toJSON();

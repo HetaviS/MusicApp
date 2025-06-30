@@ -1,19 +1,12 @@
 import { logger } from '../utils';
-import { Song, Favourites, Genre, Downloads, User, MusicSinger } from '../models';
+import { Song, Favourites, Genre, Downloads, User, MusicSinger, MovieSongConnection, Movie } from '../models';
 import { ISong } from '../types';
 
-async function getSong(songId: number): Promise<ISong | null> {
+async function getSong(songId: number, include?: any): Promise<ISong | null> {
     try {
         const song = await Song.findOne({
             where: { song_id: songId },
-            include: [{ model: Genre, as: 'genre' },
-            {
-                model: MusicSinger,
-                as: 'artists',
-            }
-
-            ]
-        });
+            include});
         const favourite_count = await Favourites.count({ where: { song_id: songId } });
         if (song) return { ...song.toJSON(), favourite_count } as ISong;
         return null;

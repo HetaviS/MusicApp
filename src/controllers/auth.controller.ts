@@ -8,7 +8,6 @@ import {
 import { Request, Response } from 'express';
 import removeExtraFields from "../services/common/removeExtraFields.service";
 import { sendEmailOTP, sendMesg91TP, sendTwilioOTP } from "../utils/otp";
-import { log } from "console";
 
 async function register(req: Request, res: Response) {
     try {
@@ -96,14 +95,14 @@ async function verifyOtp(req: Request, res: Response) {
             user = await user_service.getUser({ email: req.body.email, otp: req.body.otp });
             if (!user) return response_service.badRequestResponse(res, 'Invalid otp.');
             token = await token_service.generateToken({user_id:user.user_id});
-            await user_service.updateUser({ login_verification_status: true, otp: 0 }, { email: req.body.email });
+             user_service.updateUser({ login_verification_status: true, otp: 0 }, { email: req.body.email });
 
         }
         else if (req.body.login_type == 'mobile') {
             user = await user_service.getUser({ mobile_number: req.body.mobile_number, otp: req.body.otp });
             if (!user) return response_service.badRequestResponse(res, 'Invalid otp.');
             token = await token_service.generateToken({user_id:user.user_id});
-            await user_service.updateUser({ login_verification_status: true, otp: 0 }, { mobile_number: req.body.mobile_number });
+             user_service.updateUser({ login_verification_status: true, otp: 0 }, { mobile_number: req.body.mobile_number });
         }
         return response_service.successResponse(res, 'OTP verified successfully.', { user: removeExtraFields(user, ['otp', 'login_verification_status', 'login_type', 'is_admin', 'device_token']), token });
     }

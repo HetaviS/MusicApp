@@ -10,6 +10,7 @@ import admin_service from './admin.auth.service';
 import home_service from './home.service';
 import dashboard_service from './dashboard.service';
 import explore_service from './explore.service';
+import movie_service from './movie.service';
 import { getAllAvatars } from './avatar.service';
 
 export {
@@ -25,5 +26,6 @@ export {
     history_service,
     admin_service,
     dashboard_service,
+    movie_service,
     getAllAvatars
 };

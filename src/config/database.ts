@@ -1,4 +1,3 @@
-
 import { Sequelize } from 'sequelize';
 import { config } from '.';
 
@@ -15,11 +14,8 @@ export const initializeDatabase = async () => {
     await sequelize.authenticate();
     console.log('✅ PostgreSQL connection established successfully.');
 
-    // Import models to ensure they're registered
-    await import('../models');
-
     // Sync database (creates tables if they don't exist)
-    await sequelize.sync({ alter: true});
+    await sequelize.sync({ alter: false});
     console.log('✅ Database synchronized successfully.');
   } catch (err) {
     console.error('❌ Unable to connect to the database:', err);

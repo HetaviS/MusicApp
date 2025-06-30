@@ -11,6 +11,7 @@ import { Avatar } from './avatar';
 import { HomeBlocks } from './homeBlocks';
 import { Movie } from './movie';
 import { MovieSongConnection } from './movieSongConnetion';
+
 export {
     User,
     Song,

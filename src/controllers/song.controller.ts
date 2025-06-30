@@ -5,10 +5,28 @@ import { Request, Response } from 'express';
 import { logger } from "../utils";
 import { config } from "../config";
 import fs from 'fs'
+import { Genre, Movie, MovieSongConnection, MusicSinger } from "../models";
 
 async function getSong(req: Request, res: Response) {
     try {
-        const song = await song_service.getSong(parseInt(req.params.song_id));
+        const song = await song_service.getSong(parseInt(req.params.song_id), [
+            {
+                model: Genre,
+                as: 'genre'
+            },
+            {
+                model: MusicSinger,
+                as: 'artists',
+            },
+            {
+                model: MovieSongConnection,
+                as: 'movie',
+                include: [{
+                    model: Movie,
+                    as: 'movie_details'
+                }]
+            }]
+        );
         if (!song) return response_service.notFoundResponse(res, 'Song not found.');
         const is_favourite = await song_service.isFavourite(parseInt(req.params.song_id), req.user?.user_id);
         return response_service.successResponse(res, 'Song fetched successfully.', { ...song, is_favourite });
@@ -28,7 +46,6 @@ async function setFavourite(req: Request, res: Response) {
         return response_service.successResponse(res, `Song marked as favourite: ${isFavourite}.`);
     } catch (err: any) {
         logger.error('Error setting favourite:', err);
-        console.log('object', err);
         return response_service.internalServerErrorResponse(res, err.message);
     }
 }
@@ -72,9 +89,9 @@ async function createMusic(req: Request, res: Response) {
         let song = await singer_service.addSong({ category_id: req.body.category_id, genre_id: req.body.genre_id, audio: audio.path, thumbnail: thumbnail.path, title: req.body.title, duration: (duration).toString() });
         if (song) {
             const artist_ids = req.body.artist_ids;
-            artist_ids.forEach(async(artist_id: string) => {
+            artist_ids.forEach(async (artist_id: string) => {
                 const is_singer = await singer_service.isSinger(parseInt(artist_id));
-                if(is_singer) {
+                if (is_singer) {
                     await singer_service.addSongToArtist(parseInt(song?.song_id), parseInt(artist_id));
                 }
             });
@@ -89,7 +106,6 @@ async function createMusic(req: Request, res: Response) {
 
 async function updateSong(req: Request, res: Response) {
     try {
-       
         const songId = parseInt(req.params.song_id);
         const song = await song_service.getSong(songId);
         if (!song) return response_service.notFoundResponse(res, 'Song not found.');
@@ -97,14 +113,13 @@ async function updateSong(req: Request, res: Response) {
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
         let updatedData: any = { ...req.body };
 
-
         if (files && files['audio']) {
             updatedData.audio = files['audio'][0].path;
             const duration = await getAudioDuration(updatedData.audio);
             updatedData.duration = duration.toString();
             if (song.audio) {
                 fs.existsSync(song.audio.replace(config.clientUrl, '')) &&
-                fs.unlinkSync(song.audio.replace(config.clientUrl, ''));
+                    fs.unlinkSync(song.audio.replace(config.clientUrl, ''));
             }
         }
 
@@ -112,7 +127,7 @@ async function updateSong(req: Request, res: Response) {
             updatedData.thumbnail = files['thumbnail'][0].path;
             if (song.thumbnail) {
                 fs.existsSync(song.thumbnail.replace(config.clientUrl, '')) &&
-                fs.unlinkSync(song.thumbnail.replace(config.clientUrl, ''));
+                    fs.unlinkSync(song.thumbnail.replace(config.clientUrl, ''));
             }
         }
 

@@ -8,6 +8,8 @@ import { Favourites } from './favourites';
 import { Downloads } from './downloads';
 // import { Categories } from './categories';
 import { History } from './history';
+import { Movie } from './movie';
+import { MovieSongConnection } from './movieSongConnetion';
 
 // Define all associations here after all models are imported
 export const setupAssociations = () => {
@@ -162,5 +164,34 @@ export const setupAssociations = () => {
         as: 'history',
     });
 
+    Movie.hasMany(MovieSongConnection, {
+        foreignKey: 'movie_id',
+        as: 'songs',
+    });
+
+    MovieSongConnection.belongsTo(Movie, {
+        foreignKey: 'movie_id',
+        as: 'movie_details',
+    });
+
+    MovieSongConnection.belongsTo(Song, {
+        foreignKey: 'song_id',
+        as: 'song_details',
+    });
+
+    Song.hasMany(MovieSongConnection, {
+        foreignKey: 'song_id',
+        as: 'movie',
+    });
+
+    Album.belongsTo(Genre, {
+        foreignKey: 'genre_id',
+        as: 'song',
+    });
+
+    Genre.hasMany(Album, {
+        foreignKey: 'album_id',
+        as: 'album',
+    });
         
 };

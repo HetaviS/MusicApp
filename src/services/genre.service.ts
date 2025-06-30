@@ -17,6 +17,7 @@ async function getAllGenres(
     const offset = (page - 1) * pageSize;
 
     const { rows: genres, count: total } = await Genre.findAndCountAll({
+      where: { is_deleted: false },
       limit: pageSize,
       offset,
     });

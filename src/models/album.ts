@@ -16,7 +16,7 @@ const Album = sequelize.define('Album', {
             return this.getDataValue('thumbnail') ? config.clientUrl + this.getDataValue('thumbnail') : "";
         }
      },
-    genre: { type: DataTypes.STRING, allowNull: true },
+    genre_id: { type: DataTypes.INTEGER, allowNull: true },
     is_private: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     user_id: { // Add user_id field for the foreign key
         type: DataTypes.INTEGER,

@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
 export const createAlbumSchema = z.object({
-    genre: z
-        .string({ required_error: 'Genre is required' })
-        .min(1, 'Genre is required').optional(),
+    genre_id: z
+        .string({ required_error: 'genre_id is required' })
+        .min(1, 'genre_id is required').optional(),
     title: z
         .string({ required_error: 'Title is required' })
         .min(1, 'Title is required'),
@@ -17,9 +17,9 @@ export const createAlbumSchema = z.object({
 });
 
 export const updateAlbumSchema = z.object({
-    genre: z
-        .string({ required_error: 'Genre is required' })
-        .min(1, 'Genre is required').optional(),
+    genre_id: z
+        .string({ required_error: 'genre_id is required' })
+        .min(1, 'genre_id is required').optional(),
     title: z
         .string({ required_error: 'Title is required' })
         .min(1, 'Title is required').optional(),
@@ -30,7 +30,7 @@ export const updateAlbumSchema = z.object({
 });
 
 export const addOrRemoveSongsFromAlbumSchema = z.object({
-    songs: z
+    songIds: z
         .array(z.string())
         .min(1, 'At least one song is required'),
 })

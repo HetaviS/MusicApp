@@ -1,28 +1,29 @@
-import e, { Request, Response } from "express";
-import { album_service, response_service, singer_service } from "../services/index.service";
+import { Request, Response } from "express";
+import { album_service, response_service } from "../services/index.service";
 import { logger } from "../utils";
-import { ISong } from "../types";
 import { config } from "../config";
 import fs from "fs";
+import { AlbumSongs, Genre, Movie, MovieSongConnection, MusicSinger, Song } from "../models";
 
 async function createAlbum(req: Request, res: Response) {
     try {
         const user = req.user;
         const is_private = req.body.is_private;
-        if (is_private != 'true' && !req.user.admin_id) return response_service.badRequestResponse(res, 'You are not an artist.');
-        if(is_private == 'true' && !req.user.user_id) return response_service.badRequestResponse(res,'You cannot create private albums.')
+        if (is_private != 'true' && !req.user.admin_id) return response_service.badRequestResponse(res, 'Only admins can create public albums.');
+        if (is_private == 'true' && !req.user.user_id) return response_service.badRequestResponse(res, 'You cannot create private albums.')
+
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
 
         let songs = req.body.songs;
-    
+
         if (songs.length <= 0) return response_service.badRequestResponse(res, 'You can add only your own songs.');
         let album_data;
-        if (user.user_id){
-         album_data = { ...req.body, thumbnail: files?.['album_thumbnail'][0].path, user_id: req.user.user_id };
+        if (user.user_id) {
+            album_data = { ...req.body, thumbnail: files?.['album_thumbnail'][0].path, user_id: req.user.user_id };
         }
-        else{
-            album_data = { ...req.body, thumbnail: files?.['album_thumbnail'][0].path,}
-        }   
+        else {
+            album_data = { ...req.body, thumbnail: files?.['album_thumbnail'][0].path, }
+        }
         const album = await album_service.createAlbum(album_data);
         if (!album) return response_service.badRequestResponse(res, 'Failed to create album.');
         await album_service.addSongsToAlbum(songs, album.album_id);
@@ -36,17 +37,31 @@ async function createAlbum(req: Request, res: Response) {
 
 async function addSongsToAlbum(req: Request, res: Response) {
     try {
-        let album = await album_service.getAlbum({ album_id: req.params.album_id, user_id: req.user.user_id });
-        if (!album) return response_service.badRequestResponse(res, 'You are not the owner of this album.');
+        let user = req.user;
+        let album;
+        if (user.user_id) {
+            album = await album_service.getAlbum({ album_id: req.params.album_id, user_id: req.user.user_id });
+        }
+        else {
+            album = await album_service.getAlbum({ album_id: req.params.album_id });
+        }
+        if (!album) return response_service.badRequestResponse(res, 'Album not found.');
         let existing_songs = album.songs?.map((song: any) => song.song_id.toString());
-        let songs = req.body.songs;
+        let songs = req.body.songIds;
         existing_songs = album.songs?.filter((song: any) => songs.includes(song.song_id.toString()))
         if (existing_songs?.length > 0) return response_service.badRequestResponse(res, 'You can add only unique songs.');
-        
+
 
         songs = await album_service.addSongsToAlbum(songs, req.params.album_id);
         if (!songs) return response_service.badRequestResponse(res, 'Failed to add songs to album.');
-        return response_service.successResponse(res, 'Songs added to album successfully.', await album_service.getAlbum({ album_id: req.params.album_id }));
+        return response_service.successResponse(res, 'Songs added to album successfully.', await album_service.getAlbum({ album_id: req.params.album_id }, [{
+            model: AlbumSongs,
+            as: 'songs',
+            include: [{
+                model: Song,
+                as: 'song',
+            }]
+        }]));
     }
     catch (err: any) {
         logger.error('Error adding songs to album:', err);
@@ -56,11 +71,29 @@ async function addSongsToAlbum(req: Request, res: Response) {
 
 async function removeSongsFromAlbum(req: Request, res: Response) {
     try {
-        let album = await album_service.getAlbum({ album_id: req.params.album_id});
-        if (!album) return response_service.badRequestResponse(res, 'You are not the owner of this album.');
-        const songs = await album_service.removeSongsFromAlbum(req.body.songs, req.params.album_id);
+        let user = req.user;
+        let album;
+        if (user.user_id) {
+            album = await album_service.getAlbum({ album_id: req.params.album_id, user_id: req.user.user_id });
+        }
+        else {
+            album = await album_service.getAlbum({ album_id: req.params.album_id });
+        }
+
+        if (!album) return response_service.badRequestResponse(res, 'Album not found.');
+
+        const songs = await album_service.removeSongsFromAlbum(req.body.songIds, req.params.album_id);
+
         if (songs && songs[0] == 0) return response_service.badRequestResponse(res, 'Failed to remove songs from album.');
-        return response_service.successResponse(res, 'Songs removed from album successfully.', await album_service.getAlbum({ album_id: req.params.album_id }));
+
+        return response_service.successResponse(res, 'Songs removed from album successfully.', await album_service.getAlbum({ album_id: req.params.album_id }, [{
+            model: AlbumSongs,
+            as: 'songs',
+            include: [{
+                model: Song,
+                as: 'song',
+            }]
+        }]));
     }
     catch (err: any) {
         logger.error('Error adding songs to album:', err);
@@ -92,7 +125,34 @@ async function updateAlbum(req: Request, res: Response) {
 async function getAlbum(req: Request, res: Response) {
     try {
         const user = req.user;
-        const album = await album_service.getAlbum({ album_id: req.params.album_id});
+        const album = await album_service.getAlbum({ album_id: req.params.album_id }, [
+            {
+                model: AlbumSongs,
+                as: 'songs',
+                include: [{
+                    model: Song,
+                    as: 'song',
+                    include: [
+                        {
+                            model: Genre,
+                            as: 'genre'
+                        },
+                        {
+                            model: MusicSinger,
+                            as: 'artists',
+                        },
+                        {
+                            model: MovieSongConnection,
+                            as: 'movie',
+                            include: [{
+                                model: Movie,
+                                as: 'movie_details'
+                            }]
+                        }
+                    ]
+                }]
+            }
+        ]);
         if (!album) return response_service.badRequestResponse(res, 'You are not the owner of this album.');
         if (!album.is_private || album.user_id == req.user.user_id) {
             return response_service.successResponse(res, 'Album fetched successfully.', album);
@@ -111,7 +171,7 @@ async function getAllAlbums(req: Request, res: Response) {
         const albums = await album_service.getAllAlbums(req.body.page, req.body.limit);
         if (!albums) return response_service.notFoundResponse(res, 'Albums not found.');
         return response_service.successResponse(res, 'Albums fetched successfully.', albums);
-    } catch (err: any) {        
+    } catch (err: any) {
 
         logger.error('Error fetching albums:', err);
         return response_service.internalServerErrorResponse(res, err.message);

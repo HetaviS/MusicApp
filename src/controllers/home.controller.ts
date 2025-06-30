@@ -15,7 +15,7 @@ async function songsByGenre(req: Request, res: Response) {
     }
 }
 
-async function addBlock(req: Request, res: Response) {
+async function createBlock(req: Request, res: Response) {
     try {
         const block = await home_service.addBlock(req.body);
         return response_service.successResponse(res, 'Block added successfully.', { block });
@@ -107,7 +107,7 @@ async function deleteBlock(req: Request, res: Response) {
 
 export  {
     songsByGenre,
-    addBlock,
+    createBlock,
     updateBlock,
     getAllBlocks,
     addDataToBlock,

@@ -3,9 +3,9 @@ import { Request, Response } from 'express';
 import { logger } from "../utils";
 
 
-async function getUsersCount(req: Request, res: Response) {
+async function getCount(req: Request, res: Response) {
     try {
-        const count = await dashboard_service.usersCount(req.body.filter_by,req.body.entity);
+        const count = await dashboard_service.count(req.body.filter_by,req.body.entity);
         return response_service.successResponse(res, req.body.entity+' count retrieved successfully.', { count });
     } catch (err: any) {
         logger.error(`Error retrieving ${req.body.entity} count:`, err);
@@ -36,7 +36,7 @@ async function usersByLogin(req: Request, res: Response) {
 }
 
 export {
-    getUsersCount,
+    getCount,
     getAllUsersList,
     usersByLogin
 }

@@ -1,5 +1,5 @@
-import { Album, Genre,HomeBlocks,  Song } from '../models';
-import {  IHomeBlocks } from '../types';
+import { Album, Genre, HomeBlocks, Song } from '../models';
+import { IHomeBlocks } from '../types';
 import { genre_category_service, user_service } from './index.service';
 
 async function getAllSongsByGenre(page: number = 1, pageSize: number = 10): Promise<any[]> {
@@ -15,12 +15,33 @@ async function getAllSongsByGenre(page: number = 1, pageSize: number = 10): Prom
     }
 }
 
-async function addBlock(blockPayload:Partial<IHomeBlocks>): Promise<IHomeBlocks> {
-    try{
+async function addBlock(blockPayload: Partial<IHomeBlocks>): Promise<IHomeBlocks> {
+    try {
+        if (blockPayload.type === 'album') {
+            blockPayload.song_ids = []
+            blockPayload.genre_ids = [];
+            blockPayload.artist_ids = [];
+
+        }
+        else if (blockPayload.type === 'song') {
+            blockPayload.album_ids = []
+            blockPayload.genre_ids = [];
+            blockPayload.artist_ids = [];
+        }
+        else if (blockPayload.type === 'genre') {
+            blockPayload.album_ids = []
+            blockPayload.song_ids = [];
+            blockPayload.artist_ids = [];
+        }
+        else if (blockPayload.type === 'artist') {
+            blockPayload.album_ids = []
+            blockPayload.song_ids = [];
+            blockPayload.genre_ids = [];
+        }
         const block = await HomeBlocks.create(blockPayload);
         return block.toJSON();
     }
-    catch (err){
+    catch (err) {
         throw err;
     }
 }
@@ -64,7 +85,7 @@ async function removeDataFromBlock(blockId: number, data: Partial<IHomeBlocks>):
         const block = await HomeBlocks.findByPk(blockId) as any;
         if (!block) return null;
         if (block.type === 'album') {
-            block.album_ids = (block.album_ids || []).filter((id:number) => (!(data.album_ids || []).map(String).includes((id).toString())));
+            block.album_ids = (block.album_ids || []).filter((id: number) => (!(data.album_ids || []).map(String).includes((id).toString())));
         } else if (block.type === 'song') {
             block.song_ids = (block.song_ids || []).filter((id: number) => (!(data.song_ids || []).map(String).includes((id).toString())));
         } else if (block.type === 'genre') {
@@ -114,9 +135,9 @@ async function getBlock(blockId: number): Promise<IHomeBlocks | null> {
         } else if (block.type === 'genre') {
             data = await Promise.all(block.genre_ids.map(async (id: number) => await genre_category_service.getGenreById(id)));
         } else if (block.type === 'artist') {
-            data = await Promise.all(block.artist_ids.map(async (id: number) => await user_service.getUser({user_id:(id).toString()})) );
+            data = await Promise.all(block.artist_ids.map(async (id: number) => await user_service.getUser({ user_id: (id).toString() })));
         }
-        return block ? ({...block.toJSON(),data} as IHomeBlocks) : null;
+        return block ? ({ ...block.toJSON(), data } as IHomeBlocks) : null;
     } catch (err) {
         throw err;
     }

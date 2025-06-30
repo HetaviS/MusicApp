@@ -1,11 +1,11 @@
 import { IUser } from "../types";
-import { Album, Song, User } from "../models";
+import { Album, Movie, Song, User } from "../models";
 import {  fn, col, literal } from 'sequelize';
 import removeExtraFields from "./common/removeExtraFields.service";
 
 type Timeframe = 'day' | 'week' | 'month' | 'year'|'total';
 
-export async function usersCount(timeframe: Timeframe, entity: 'users' | 'songs' | 'albums' | 'artists'): Promise<any[]> {
+export async function count(timeframe: Timeframe, entity: 'users' | 'songs' | 'albums' | 'artists'|'movies'): Promise<any[]> {
     try {
         let format: string;
         
@@ -42,11 +42,14 @@ export async function usersCount(timeframe: Timeframe, entity: 'users' | 'songs'
                     const totalSongs = await Song.count();
                     return [{ period: 'Total', count: totalSongs }];
                 case 'albums':
-                    const totalAlbums = await Album.count();
+                      const totalAlbums = await Album.count({ where: { is_deleted: false } });
                     return [{ period: 'Total', count: totalAlbums }];
                 case 'artists':
                     const totalArtists = await User.count({ where: { is_deleted: false, is_singer: true } });
-                    return [{ period: 'Total', count: totalArtists }];
+                      return [{ period: 'Total', count: totalArtists }];
+                case 'movies':
+                      const totalMovies = await Movie.count({ where: { is_deleted: false } });
+                    return [{ period: 'Total', count: totalMovies }];
                 default:
                     throw new Error('Invalid entity type');
             }
@@ -93,6 +96,15 @@ export async function usersCount(timeframe: Timeframe, entity: 'users' | 'songs'
                     group: [fn('TO_CHAR', col('createdAt'), format)],
                     order: [ [literal(`period`), 'ASC'] ]
                 }).then(result => result.map(row => row.toJSON()));
+            case 'movies':
+                return await Movie.findAll({
+                    attributes: [
+                        [fn('TO_CHAR', col('createdAt'), format), 'period'],
+                        [fn('COUNT', col('movie_id')), 'count']
+                    ],
+                    group: [fn('TO_CHAR', col('createdAt'), format)],
+                    order: [ [literal(`period`), 'ASC'] ]
+                })
             default:
                 throw new Error('Invalid entity type');
         }
@@ -166,6 +178,6 @@ async function usersByLogin(){
 
 export default {
     getAllUsersList,
-    usersCount,
+    count,
     usersByLogin,
 };
