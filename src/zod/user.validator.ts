@@ -1,6 +1,9 @@
 import z from 'zod';
 
 export const updateUserSchema = z.object({
+    user_id: z
+        .string({ required_error: 'User ID is required' })
+        .optional(),
     avatar_id: z
         .string({ required_error: 'Avatar ID is required' })
         .optional(),

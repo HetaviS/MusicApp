@@ -5,6 +5,7 @@ import removeExtraFields from "../services/common/removeExtraFields.service";
 import * as fs from 'fs';
 import { getAvatar } from "../services/avatar.service";
 import { config } from "../config";
+import { log } from "console";
 
 
 async function getUser(req: Request, res: Response) {
@@ -26,7 +27,7 @@ async function getUser(req: Request, res: Response) {
  */
 async function updateUser(req: Request, res: Response) {
     try {
-        const userId = req.params.artist_id || req.user.user_id;
+        const userId = req.body.artist_id || req.user.user_id;
         let user = await user_service.getUser({ user_id: userId });
 
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;

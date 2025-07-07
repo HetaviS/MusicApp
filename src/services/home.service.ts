@@ -1,6 +1,9 @@
-import { Album, Genre, HomeBlocks, Song } from '../models';
-import { IHomeBlocks } from '../types';
+import { log } from 'console';
+import { Album, Genre, HomeBlocks, MusicSinger, Song, User } from '../models';
+import { IHomeBlocks, ISong } from '../types';
+import removeExtraFields from './common/removeExtraFields.service';
 import { genre_category_service, user_service } from './index.service';
+import { Sequelize } from 'sequelize';
 
 async function getAllSongsByGenre(page: number = 1, pageSize: number = 10): Promise<any[]> {
     try {
@@ -63,14 +66,16 @@ async function addDataToBlock(blockId: number, data: Partial<IHomeBlocks>): Prom
         const block = await HomeBlocks.findByPk(blockId) as any;
         if (!block) return null;
 
-        if (block.type === 'album') {
+        if (block.type === 'album' || block.type === 'mix') {
             block.album_ids = [...(block.album_ids || []), ...(data.album_ids || [])];
-        } else if (block.type === 'song') {
+        }
+        if (block.type === 'song' || block.type === 'mix') {
             block.song_ids = [...(block.song_ids || []), ...(data.song_ids || [])];
-        } else if (block.type === 'genre') {
+        }
+        if (block.type === 'genre' || block.type === 'mix') {
             block.genre_ids = [...(block.genre_ids || []), ...(data.genre_ids || [])];
         }
-        else if (block.type === 'artist') {
+        if (block.type === 'artist' || block.type === 'mix') {
             block.artist_ids = [...(block.artist_ids || []), ...(data.artist_ids || [])];
         }
         await block.save();
@@ -84,13 +89,16 @@ async function removeDataFromBlock(blockId: number, data: Partial<IHomeBlocks>):
     try {
         const block = await HomeBlocks.findByPk(blockId) as any;
         if (!block) return null;
-        if (block.type === 'album') {
+        if (block.type === 'album' || block.type === 'mix') {
             block.album_ids = (block.album_ids || []).filter((id: number) => (!(data.album_ids || []).map(String).includes((id).toString())));
-        } else if (block.type === 'song') {
+        }
+        if (block.type === 'song' || block.type === 'mix') {
             block.song_ids = (block.song_ids || []).filter((id: number) => (!(data.song_ids || []).map(String).includes((id).toString())));
-        } else if (block.type === 'genre') {
+        }
+        if (block.type === 'genre' || block.type === 'mix') {
             block.genre_ids = (block.genre_ids || []).filter((id: number) => (!(data.genre_ids || []).map(String).includes((id).toString())));
-        } else if (block.type === 'artist') {
+        }
+        if (block.type === 'artist' || block.type === 'mix') {
             block.artist_ids = (block.artist_ids || []).filter((id: number) => (!(data.artist_ids || []).map(String).includes((id).toString())));
         }
 
@@ -101,47 +109,159 @@ async function removeDataFromBlock(blockId: number, data: Partial<IHomeBlocks>):
     }
 }
 
-async function getAllBlocks(page: number = 1, limit: number = 10): Promise<{ blocks: IHomeBlocks[]; total: number; totalPages: number; currentPage: number }> {
+async function getAllBlocks(): Promise<{ blocks: Partial<IHomeBlocks>[] }> {
     try {
-        const offset = (page - 1) * limit;
 
         const { count, rows } = await HomeBlocks.findAndCountAll({
             where: { is_deleted: false },
-            order: [['createdAt', 'DESC']],
-            limit,
-            offset
+            order: [['order_id', 'ASC']],
+            attributes: [
+                'block_id',
+                'type',
+                'title',
+                'subtitle',
+                'order_id',
+                [Sequelize.fn('array_length', Sequelize.col('album_ids'), 1), 'album_count'],
+                [Sequelize.fn('array_length', Sequelize.col('song_ids'), 1), 'song_count'],
+                [Sequelize.fn('array_length', Sequelize.col('genre_ids'), 1), 'genre_count'],
+                [Sequelize.fn('array_length', Sequelize.col('artist_ids'), 1), 'artist_count'],
+
+            ]
         });
+
         return {
-            blocks: rows.map(block => block.toJSON() as IHomeBlocks),
-            total: count,
-            totalPages: Math.ceil(count / limit),
-            currentPage: page
+            blocks: rows.map(block => block.toJSON() as Partial<IHomeBlocks>),
         };
     } catch (err) {
         throw err;
     }
 }
-
-async function getBlock(blockId: number): Promise<IHomeBlocks | null> {
+async function getBlock(blockId: number, limits: { album?: number, song?: number, genre?: number, artist?: number }, page: number = 1, pageSize: number = 10): Promise<Partial<IHomeBlocks> | null> {
     try {
         const block = await HomeBlocks.findByPk(blockId) as any;
-        //Populate the block with related data based on its type
         if (!block) return null;
-        let data: any = [];
-        if (block.type === 'album') {
-            data = await Promise.all(block.album_ids.map(async (id: number) => await Album.findByPk(id)));
-        } else if (block.type === 'song') {
-            data = await Promise.all(block.song_ids.map(async (id: number) => await Song.findByPk(id)));
-        } else if (block.type === 'genre') {
-            data = await Promise.all(block.genre_ids.map(async (id: number) => await genre_category_service.getGenreById(id)));
-        } else if (block.type === 'artist') {
-            data = await Promise.all(block.artist_ids.map(async (id: number) => await user_service.getUser({ user_id: (id).toString() })));
+
+        // Count how many categories are present to split the pageSize accordingly
+        const categoriesCount = (block.album_ids?.length ? 1 : 0)
+            + (block.song_ids?.length ? 1 : 0)
+            + (block.genre_ids?.length ? 1 : 0)
+            + (block.artist_ids?.length ? 1 : 0);
+
+        let start = (page - 1) * pageSize;
+        let end = start + pageSize;
+
+        let data: any[] = [];
+        let total = 0;
+        const isMix = block.type === 'mix';
+        if (block.type === 'album' || (isMix && limits['album'])) {
+            if (limits['album']) {
+                start = (page - 1) * limits['album'];
+                end = start + limits['album'];
+            }
+            const allIds = block.album_ids || [];
+            const paginatedIds = allIds.slice(start, end);
+            total += allIds.length;
+
+            const albums = await Promise.all(paginatedIds.map((id: number) => Album.findByPk(id)));
+            data.push(...albums.map((album: any) => ({
+                album_id: album?.album_id,
+                thumbnail: album?.thumbnail,
+                title: album?.title,
+                subtitle: album?.subtitle,
+                description: album?.description
+            })));
         }
-        return block ? ({ ...block.toJSON(), data } as IHomeBlocks) : null;
+
+        if (block.type === 'song' || (isMix && limits['song'])) {
+            if (limits['song']) {
+                start = (page - 1) * limits['song'];
+                end = start + limits['song'];
+            }
+            const allIds = block.song_ids || [];
+            const paginatedIds = allIds.slice(start, end);
+            total += allIds.length;
+
+            const songs = await Promise.all(paginatedIds.map(async (id: number) => {
+                const song = await Song.findByPk(id, {
+                    include: [{ model: MusicSinger, as: 'artists', include: [{ model: User, as: 'singer', attributes: ['full_name', 'profile_pic'] }] }]
+                }) as Partial<ISong>;
+
+                if (!song) return null;
+                return {
+                    song_id: song.song_id,
+                    thumbnail: song.thumbnail,
+                    audio: song.audio,
+                    title: song.title,
+                    artists: {
+                        artist: song.artists?.map((artist: any) => ({
+                            user_id: artist.user_id,
+                            full_name: artist.singer.full_name,
+                            profile_pic: artist.singer.profile_pic
+                        })) || []
+                    }
+                };
+            }));
+
+            data.push(...songs.filter(Boolean)); // filter out nulls
+        }
+
+        if (block.type === 'genre' || (isMix && limits['genre'])) {
+            if (limits['genre']) {
+                start = (page - 1) * limits['genre'];
+                end = start + limits['genre'];
+            }
+            const allIds = block.genre_ids || [];
+            const paginatedIds = allIds.slice(start, end);
+            total += allIds.length;
+
+            const genres = await Promise.all(paginatedIds.map((id: number) => genre_category_service.getGenreById(id)));
+            data.push(...genres.map((genre: any) => ({
+                genre_id: genre?.genre_id,
+                name: genre?.name,
+                background_img: genre?.background_img,
+            })));
+        }
+
+        if (block.type === 'artist' || (isMix && limits['artist'])) {
+            if (limits['artist']) {
+                start = (page - 1) * limits['artist'];
+                end = start + limits['artist'];
+            }
+            const allIds = block.artist_ids || [];
+            const paginatedIds = allIds.slice(start, end);
+            total += allIds.length;
+            const artists = await Promise.all(paginatedIds.map((id: number) => user_service.getUser({ user_id: id.toString() })));
+            data.push(...await Promise.all(artists.map(async (artist: any) => {
+                const songs_count = await MusicSinger.count({ where: { user_id: artist['user_id'] } });
+                return {
+                    user_id: artist['user_id'],
+                    full_name: artist['full_name'],
+                    profile_pic: artist['profile_pic'],
+                    songs_count
+                };
+            })));
+        }
+
+        return {
+            block_id: block.block_id,
+            title: block.title,
+            subtitle: block.subtitle,
+            description: block.description,
+            type: block.type,
+            order_id: block.order_id,
+            data:data.sort(() => Math.random() - 0.5),
+            pagination: {
+                page:parseInt(page.toString()),
+                pageSize: parseInt(isMix ? data.length.toString() : pageSize.toString()),
+                total:parseInt(total.toString()),
+                totalPages: Math.ceil(total / pageSize),
+            }
+        } as Partial<IHomeBlocks>;
     } catch (err) {
         throw err;
     }
 }
+
 
 export default {
     getAllSongsByGenre,

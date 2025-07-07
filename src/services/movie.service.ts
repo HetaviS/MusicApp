@@ -4,14 +4,14 @@ async function getAllMovies(page: number = 1, limit: number = 10, include?: any)
     try {
         const offset = (page - 1) * limit;
 
-        const { rows: movies, count: total } = await Movie.findAndCountAll({
+        const  movies  = await Movie.findAll({
             include,
             where: { is_deleted: false },
             limit,
             offset,
             order: [['createdAt', 'DESC']],
         });
-
+        const total = movies.length;
         return {
             movies,
             total,

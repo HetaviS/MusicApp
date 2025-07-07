@@ -4,6 +4,7 @@ import { logger } from "../utils";
 import { config } from "../config";
 import fs from "fs";
 import { AlbumSongs, Genre, Movie, MovieSongConnection, MusicSinger, Song } from "../models";
+import { log } from "console";
 
 async function createAlbum(req: Request, res: Response) {
     try {
@@ -40,10 +41,10 @@ async function addSongsToAlbum(req: Request, res: Response) {
         let user = req.user;
         let album;
         if (user.user_id) {
-            album = await album_service.getAlbum({ album_id: req.params.album_id, user_id: req.user.user_id });
+            album = await album_service.getAlbum({ album_id: req.body.album_id, user_id: req.user.user_id });
         }
         else {
-            album = await album_service.getAlbum({ album_id: req.params.album_id });
+            album = await album_service.getAlbum({ album_id: req.body.album_id });
         }
         if (!album) return response_service.badRequestResponse(res, 'Album not found.');
         let existing_songs = album.songs?.map((song: any) => song.song_id.toString());
@@ -52,9 +53,9 @@ async function addSongsToAlbum(req: Request, res: Response) {
         if (existing_songs?.length > 0) return response_service.badRequestResponse(res, 'You can add only unique songs.');
 
 
-        songs = await album_service.addSongsToAlbum(songs, req.params.album_id);
+        songs = await album_service.addSongsToAlbum(songs, req.body.album_id);
         if (!songs) return response_service.badRequestResponse(res, 'Failed to add songs to album.');
-        return response_service.successResponse(res, 'Songs added to album successfully.', await album_service.getAlbum({ album_id: req.params.album_id }, [{
+        return response_service.successResponse(res, 'Songs added to album successfully.', await album_service.getAlbum({ album_id: req.body.album_id }, [{
             model: AlbumSongs,
             as: 'songs',
             include: [{
@@ -74,19 +75,19 @@ async function removeSongsFromAlbum(req: Request, res: Response) {
         let user = req.user;
         let album;
         if (user.user_id) {
-            album = await album_service.getAlbum({ album_id: req.params.album_id, user_id: req.user.user_id });
+            album = await album_service.getAlbum({ album_id: req.body.album_id, user_id: req.user.user_id });
         }
         else {
-            album = await album_service.getAlbum({ album_id: req.params.album_id });
+            album = await album_service.getAlbum({ album_id: req.body.album_id });
         }
 
         if (!album) return response_service.badRequestResponse(res, 'Album not found.');
 
-        const songs = await album_service.removeSongsFromAlbum(req.body.songIds, req.params.album_id);
+        const songs = await album_service.removeSongsFromAlbum(req.body.songIds, req.body.album_id);
 
         if (songs && songs[0] == 0) return response_service.badRequestResponse(res, 'Failed to remove songs from album.');
 
-        return response_service.successResponse(res, 'Songs removed from album successfully.', await album_service.getAlbum({ album_id: req.params.album_id }, [{
+        return response_service.successResponse(res, 'Songs removed from album successfully.', await album_service.getAlbum({ album_id: req.body.album_id }, [{
             model: AlbumSongs,
             as: 'songs',
             include: [{
@@ -103,17 +104,25 @@ async function removeSongsFromAlbum(req: Request, res: Response) {
 
 async function updateAlbum(req: Request, res: Response) {
     try {
-        let album = await album_service.getAlbum({ album_id: req.params.album_id });
+        let album = await album_service.getAlbum({ album_id: req.body.album_id });
         if (!album) return response_service.badRequestResponse(res, 'You are not the owner of this album.');
         if (album.is_private && req.user.user_id != album.user_id) return response_service.badRequestResponse(res, '')
         const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
         let del_album;
         if (files?.['album_thumbnail']) del_album = album.thumbnail
 
-        const album_data = { ...req.body, thumbnail: files?.['album_thumbnail']?.[0].path, songs: null };
-        album = await album_service.updateAlbum(album_data, { album_id: req.params.album_id });
+        const album_data = { ...req.body, thumbnail: files?.['album_thumbnail']?.[0].path };
+        log("album_data")
+        log(album_data)
+        // 
+        album = await album_service.updateAlbum(album_data, { album_id: req.body.album_id });
         if (!album) return response_service.badRequestResponse(res, 'Failed to update album.');
-        fs.existsSync(album.thumbnail.replace(config.clientUrl, '')) && fs.unlinkSync(album.thumbnail.replace(config.clientUrl, ''));
+        if (del_album) {
+            const del_album_path = del_album.replace(config.clientUrl, '');
+            if (fs.existsSync(del_album_path)) {
+                fs.unlinkSync(del_album_path);
+            }
+        }
         return response_service.successResponse(res, 'Album updated successfully.', album);
     }
     catch (err: any) {
@@ -125,7 +134,7 @@ async function updateAlbum(req: Request, res: Response) {
 async function getAlbum(req: Request, res: Response) {
     try {
         const user = req.user;
-        const album = await album_service.getAlbum({ album_id: req.params.album_id }, [
+        const album = await album_service.getAlbum({ album_id: req.body.album_id }, [
             {
                 model: AlbumSongs,
                 as: 'songs',

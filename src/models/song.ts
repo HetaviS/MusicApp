@@ -10,12 +10,14 @@ const Song = sequelize.define('song', {
     },
     title: { type: DataTypes.STRING, allowNull: false },
     audio: {
-        type: DataTypes.STRING, allowNull: false, get: function () {
+        type: DataTypes.STRING, allowNull: false,
+        get: function () {
             return config.clientUrl + this.getDataValue('audio');
         }
     },
     thumbnail: {
-        type: DataTypes.STRING, allowNull: false, get: function () {
+        type: DataTypes.STRING, allowNull: false,
+        get: function () {
             return config.clientUrl + this.getDataValue('thumbnail');
         }
     },

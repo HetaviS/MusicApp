@@ -88,6 +88,7 @@ function generateOTP() {
     return otp.toString();
 }
 
+
 async function verifyOtp(req: Request, res: Response) {
     try {
         let user, token;

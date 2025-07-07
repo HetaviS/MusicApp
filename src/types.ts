@@ -85,6 +85,7 @@ export interface IFavourites {
 export interface IGenre {
     genre_id: string;
     name: string;
+    background_img: string;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -138,6 +139,7 @@ export interface IAdmin {
 export interface IHomeBlocks {
     block_id: string;
     type: string; // e.g., 'artist', 'album', 'song','artist'
+    subtitle: string;
     title: string;
     description: string;
     albums?: IAlbum[]; // Assuming albums is an array of album objects

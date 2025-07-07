@@ -6,10 +6,11 @@ import { logger } from "../utils";
 import { config } from "../config";
 import fs from 'fs'
 import { Genre, Movie, MovieSongConnection, MusicSinger } from "../models";
+import { log } from "console";
 
 async function getSong(req: Request, res: Response) {
     try {
-        const song = await song_service.getSong(parseInt(req.params.song_id), [
+        const song = await song_service.getSong(parseInt(req.body.song_id), [
             {
                 model: Genre,
                 as: 'genre'
@@ -28,7 +29,7 @@ async function getSong(req: Request, res: Response) {
             }]
         );
         if (!song) return response_service.notFoundResponse(res, 'Song not found.');
-        const is_favourite = await song_service.isFavourite(parseInt(req.params.song_id), req.user?.user_id);
+        const is_favourite = await song_service.isFavourite(parseInt(req.body.song_id), req.user?.user_id);
         return response_service.successResponse(res, 'Song fetched successfully.', { ...song, is_favourite });
     } catch (err: any) {
         logger.error('Error fetching song:', err);
@@ -39,7 +40,7 @@ async function getSong(req: Request, res: Response) {
 async function setFavourite(req: Request, res: Response) {
     try {
         const user = req.user;
-        const songId = parseInt(req.params.song_id);
+        const songId = parseInt(req.body.song_id);
         const song = await song_service.getSong(songId);
         if (!song) return response_service.notFoundResponse(res, 'Song not found.');
         const isFavourite = await song_service.setFavourite(user.user_id, songId);
@@ -53,7 +54,7 @@ async function setFavourite(req: Request, res: Response) {
 async function setDownloaded(req: Request, res: Response) {
     try {
         const user = req.user;
-        const songId = parseInt(req.params.song_id);
+        const songId = parseInt(req.body.song_id);
         const song = await song_service.getSong(songId);
         if (!song) return response_service.notFoundResponse(res, 'Song not found.');
         const isDownloaded = await song_service.setDownloaded(user.user_id, songId);
@@ -67,7 +68,7 @@ async function setDownloaded(req: Request, res: Response) {
 
 async function getMySongs(req: Request, res: Response) {
     try {
-        const songs = await singer_service.mySongs(parseInt(req.params.artistId), req.body.page, req.body.limit);
+        const songs = await singer_service.mySongs(parseInt(req.body.artist_id), req.body.page, req.body.limit);
         if (songs) {
             return response_service.successResponse(res, 'Songs fetched successfully.', songs);
         }
@@ -106,7 +107,7 @@ async function createMusic(req: Request, res: Response) {
 
 async function updateSong(req: Request, res: Response) {
     try {
-        const songId = parseInt(req.params.song_id);
+        const songId = parseInt(req.body.song_id);
         const song = await song_service.getSong(songId);
         if (!song) return response_service.notFoundResponse(res, 'Song not found.');
 

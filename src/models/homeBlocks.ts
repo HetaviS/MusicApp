@@ -7,12 +7,17 @@ const HomeBlocks = sequelize.define('HomeBlocks', {
         primaryKey: true,
         autoIncrement: true,
     },
-    type:{
-        type: DataTypes.ENUM('album', 'song', 'genre','artist'),
+    type: {
+        type: DataTypes.ENUM('album', 'song', 'genre', 'artist', 'mix'),
         allowNull: false,
         defaultValue: "album",
     },
     title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: "",
+    },
+    subtitle: {
         type: DataTypes.STRING,
         allowNull: false,
         defaultValue: "",
@@ -45,6 +50,10 @@ const HomeBlocks = sequelize.define('HomeBlocks', {
     is_deleted: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
+    },
+    order_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
     }
 }, {
     tableName: 'homeBlocks',

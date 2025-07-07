@@ -26,13 +26,13 @@ export async function createMovie(req: Request, res: Response) {
 
 export async function getAllMovies(req: Request, res: Response) {
     try {
-        const movies = await movie_service.getAllMovies(req.body.page, req.body.limit,[
-                {
-                    model: MovieSongConnection,
-                    as: 'songs',
-                    include: [{ model: Song, as: 'song_details' }],
-                },
-            ],);
+        const movies = await movie_service.getAllMovies(req.body.page, req.body.limit, [
+            {
+                model: MovieSongConnection,
+                as: 'songs',
+                include: [{ model: Song, as: 'song_details' }],
+            },
+        ],);
         if (!movies || movies.total === 0) {
             return response_service.notFoundResponse(res, 'No movies found.');
         }
@@ -45,7 +45,7 @@ export async function getAllMovies(req: Request, res: Response) {
 
 export async function getMovieById(req: Request, res: Response) {
     try {
-        const movie = await movie_service.getMovie(parseInt(req.params.movieId), [
+        const movie = await movie_service.getMovie(parseInt(req.body.movie_id), [
             {
                 model: MovieSongConnection,
                 as: 'songs',
@@ -69,7 +69,7 @@ export async function getMovieById(req: Request, res: Response) {
 
 export async function updateMovie(req: Request, res: Response) {
     try {
-        let movie = await movie_service.getMovie(parseInt(req.params.movieId));
+        let movie = await movie_service.getMovie(parseInt(req.body.movie_id));
         if (!movie) {
             return response_service.notFoundResponse(res, 'Movie not found.');
         }
@@ -83,7 +83,7 @@ export async function updateMovie(req: Request, res: Response) {
         else {
             movie_data = { ...movie_data };
         }
-        movie = await movie_service.updateMovie(parseInt(req.params.movieId), movie_data);
+        movie = await movie_service.updateMovie(parseInt(req.body.movie_id), movie_data);
         if (!movie) {
             return response_service.badRequestResponse(res, 'Failed to update movie.');
         }
@@ -99,7 +99,7 @@ export async function updateMovie(req: Request, res: Response) {
 
 export async function deleteMovie(req: Request, res: Response) {
     try {
-        const movie = await movie_service.deleteMovie(parseInt(req.params.movieId));
+        const movie = await movie_service.deleteMovie(parseInt(req.body.movie_id));
         if (!movie) {
             return response_service.notFoundResponse(res, 'Movie not found.');
         }
@@ -124,11 +124,11 @@ export async function addSongsToMovie(req: Request, res: Response) {
         if (song_ids.length === 0) {
             return response_service.badRequestResponse(res, 'Songs are already in a movie.');
         }
-        const movie = await movie_service.addSongsToMovie(song_ids, parseInt(req.params.movieId));
+        const movie = await movie_service.addSongsToMovie(song_ids, parseInt(req.body.movie_id));
         if (!movie) {
             return response_service.notFoundResponse(res, 'Movie not found.');
         }
-        return response_service.successResponse(res, 'Songs added to movie successfully.', await movie_service.getMovie(parseInt(req.params.movieId), [
+        return response_service.successResponse(res, 'Songs added to movie successfully.', await movie_service.getMovie(parseInt(req.body.movie_id), [
             {
                 model: MovieSongConnection,
                 as: 'songs',
@@ -150,11 +150,11 @@ export async function addSongsToMovie(req: Request, res: Response) {
 export async function removeSongsFromMovie(req: Request, res: Response) {
     try {
         const { songIds } = req.body;
-        const movie = await movie_service.removeSongsFromMovie(songIds, parseInt(req.params.movieId));
+        const movie = await movie_service.removeSongsFromMovie(songIds, parseInt(req.body.movie_id));
         if (!movie) {
             return response_service.notFoundResponse(res, 'Movie not found.');
         }
-        return response_service.successResponse(res, 'Songs removed from movie successfully.', await movie_service.getMovie(parseInt(req.params.movieId), [
+        return response_service.successResponse(res, 'Songs removed from movie successfully.', await movie_service.getMovie(parseInt(req.body.movie_id), [
             {
                 model: MovieSongConnection,
                 as: 'songs',

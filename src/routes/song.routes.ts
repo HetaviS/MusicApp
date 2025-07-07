@@ -4,13 +4,14 @@ import { getSong, setFavourite, setDownloaded, getMySongs, createMusic, updateSo
 import { uploadMusicSchema, updateMusicSchema } from "../zod/song.validator";
 import { validateBody } from "../middleware/zod.middleware";
 import { paginationSchema } from "../zod/pagenation.validator";
+import z from "zod";
 const router = Router();
 router.use(authenticate)
-router.get('/get/:song_id', getSong);
-router.post('/favourite/:song_id', setFavourite);
-router.post('/download/:song_id', setDownloaded);
+router.post('/get', validateBody(z.object({ song_id: z.string().min(1, 'song_id is required.') })), getSong);
+router.post('/favourite', validateBody(z.object({ song_id: z.string().min(1, 'song_id is required.') })), setFavourite);
+router.post('/download', validateBody(z.object({ song_id: z.string().min(1, 'song_id is required.') })), setDownloaded);
 router.get('/next-song', getNextSong);
-router.get('/:artistId',validateBody(paginationSchema), getMySongs);
+router.post('/', validateBody(z.object({ artist_id: z.string(), page: z.string().optional(), limit: z.string().optional() })), getMySongs);
 
 
 export default router;

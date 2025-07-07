@@ -5,6 +5,6 @@ import { searchSchema } from "../zod/explore.validator";
 
 const router = Router();
 
-router.get('/search',validateBody(searchSchema), search);
+router.post('/search', validateBody(searchSchema), search);
 
 export default router;

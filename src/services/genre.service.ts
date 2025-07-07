@@ -43,6 +43,17 @@ async function createGenre(genrePayload: Partial<IGenre>): Promise<IGenre | null
     }
 }
 
+async function updateGenre(genreId: number, genrePayload: Partial<IGenre>): Promise<IGenre | null> {
+    try {
+        const genre = await Genre.findByPk(genreId);
+        if (!genre) return null;
+        await genre.update(genrePayload);
+        return genre.toJSON();
+    } catch (err) {
+        throw err;
+    }
+}
+
 async function removeGenre(genreId: number): Promise<number> {
     try {
         const result = await Genre.update({is_deleted:true},{ where: { genre_id: genreId } });
@@ -100,5 +111,6 @@ export default {
     createGenre,
     removeGenre,
     getSongsByGenre,
-    getGenreById
+  getGenreById,
+  updateGenre
 };

@@ -17,6 +17,7 @@ export const createAlbumSchema = z.object({
 });
 
 export const updateAlbumSchema = z.object({
+    album_id: z.string().optional(),
     genre_id: z
         .string({ required_error: 'genre_id is required' })
         .min(1, 'genre_id is required').optional(),
@@ -30,6 +31,7 @@ export const updateAlbumSchema = z.object({
 });
 
 export const addOrRemoveSongsFromAlbumSchema = z.object({
+    album_id: z.string({ required_error: 'album_id is required' }),
     songIds: z
         .array(z.string())
         .min(1, 'At least one song is required'),

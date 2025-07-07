@@ -7,7 +7,6 @@ import genre_routes from './genre.routes';
 import admin_routes from './admin.routes';
 import avatar_routes from './avatar.routes';
 import home_routes from './home.routes';
-import artist_routes from './artist.auth.routes';
 import explore_routes from './explore.routes';
 import movie_routes from './movie.routes';
 import { uploadDocs } from '../middleware/upload.middleware';
@@ -24,7 +23,6 @@ router.use('/genre', genre_routes);
 router.use('/admin', admin_routes);
 router.use('/avatar', avatar_routes);
 router.use('/home', home_routes);
-router.use('/artist', artist_routes);
 router.use('/explore', explore_routes);
 router.use('/movie', movie_routes);
 

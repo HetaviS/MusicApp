@@ -56,11 +56,10 @@ async function getAlbum(where: Partial<IAlbum>, include?: any): Promise<IAlbum |
     }
 }
 
-async function getAllAlbums(where: Partial<IAlbum> = {}, page: number = 1, pageSize: number = 10): Promise<IAlbum[]> {
+async function getAllAlbums( page: number = 1, pageSize: number = 10): Promise<IAlbum[]> {
     try {
         const offset = (page - 1) * pageSize;
         const albums = await Album.findAll({
-            where: { ...where },
             limit: pageSize,
             offset,
             attributes: {
@@ -81,7 +80,7 @@ async function getAllAlbums(where: Partial<IAlbum> = {}, page: number = 1, pageS
         });
 
 
-        return albums.map(album => album.toJSON() as IAlbum);
+        return albums.map(album => album.toJSON() );
     }
     catch (err) {
         throw err;

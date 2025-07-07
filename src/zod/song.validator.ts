@@ -12,6 +12,8 @@ export const uploadMusicSchema = z.object({
     });
 
 export const updateMusicSchema = z.object({
+    song_id: z
+        .string({ required_error: 'Song id is required' }),
     genre_id: z
         .string({ required_error: 'Genre id is required' })
         .optional(),

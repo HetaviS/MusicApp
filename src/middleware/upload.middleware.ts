@@ -1,3 +1,4 @@
+import { log } from 'console';
 import { logger } from '../utils';
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
@@ -24,6 +25,9 @@ const storage = multer.diskStorage({
             case 'poster':
                 cb(null, 'uploads/movie_poster/');
                 break;
+            case 'genre_background_img':
+                cb(null, 'uploads/genre_background_img/');
+                break;
             default:
                 cb(null, 'uploads/anonymous/');
                 break;
@@ -34,7 +38,7 @@ const storage = multer.diskStorage({
         const ext = path.extname(file.originalname);
         const baseName = path.basename(file.originalname, ext);
         const filename = `${Date.now()}-${baseName}${ext}`;
-        cb(null, filename);
+        return cb(null, filename);
     }
 });
 
@@ -85,6 +89,13 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
                 cb(new Error('Invalid image file type.'));
             }
             break;
+        case 'genre_background_img':
+            allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (allowedImageTypes.includes(file.mimetype)) {
+                cb(null, true);
+            } else {
+                cb(new Error('Invalid image file type.'));
+            }
         default:
             cb(new Error('Unexpected file field.'));
             break;
@@ -95,9 +106,9 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
 
 const upload = multer({
     storage,
-    fileFilter,
+    // fileFilter,
     limits: {
-        fileSize: 15 * 1024 * 1024 // 15MB total
+        fileSize: 100 * 1024 * 1024 // 15MB total
     }
 });
 
@@ -109,11 +120,11 @@ export const uploadDocs = (req: Request, res: Response, next: NextFunction) => {
         { name: 'thumbnail', maxCount: 1 },
         { name: 'album_thumbnail', maxCount: 1 },
         { name: 'profile_pic', maxCount: 1 },
-        { name: 'poster', maxCount: 1 }
+        { name: 'poster', maxCount: 1 },
+        { name: 'genre_background_img', maxCount: 1 }
     ]);
     uploadFields(req, res, (err: any) => {
         if (err instanceof multer.MulterError) {
-            logger.error('Multer error:', err);
             return res.status(400).json({ error: 'Multer error: ' + err.message });
         } else if (err) {
             return res.status(400).json({ error: err.message });

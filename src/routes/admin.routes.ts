@@ -1,4 +1,4 @@
-import { authenticate, authenticateAdmin } from "../middleware/auth.middleware";
+import { authenticateAdmin } from "../middleware/auth.middleware";
 import { Router } from "express";
 import { validateBody } from "../middleware/zod.middleware";
 import { adminLoginSchema, adminUpdateSchema } from "../zod/admin.auth.validator";
@@ -12,62 +12,62 @@ import { updateMusicSchema, uploadMusicSchema } from "../zod/song.validator";
 import { createMusic, updateSong } from "../controllers/song.controller";
 import { createArtist, deleteArtist, getArtists, updateArtist } from "../controllers/artist.auth.controller";
 import { updateUserSchema } from "../zod/user.validator";
-import { updateUser } from "../controllers/user.controller";
 import { SigninSchema } from "../zod/auth.validator";
-import { CreateGenreCategoryValidator } from "../zod/genre.category.validator";
-import { createGenre, removeGenre } from "../controllers/genre.controller";
+import { CreateGenreSchema, updateGenreSchema } from "../zod/genre.category.validator";
+import { createGenre, removeGenre, updateGenre } from "../controllers/genre.controller";
 import { addOrRemoveSongsFromAlbumSchema, createAlbumSchema, updateAlbumSchema } from "../zod/album.validator";
 import { addSongsToAlbum, createAlbum, getAllAlbums, removeSongsFromAlbum, updateAlbum } from "../controllers/album.controller";
 import { addSongsToMovie, createMovie, deleteMovie, removeSongsFromMovie, updateMovie } from "../controllers/movie.controller";
-import { createMovieSchema, updateMovieSchema } from "../zod/movie.validator";
-const router = Router();
+import { addOrRemoveSongsFromMovieSchema, createMovieSchema, updateMovieSchema } from "../zod/movie.validator";
 
+const router = Router();
 
 router.post('/login', validateBody(adminLoginSchema), verifyAdmin);
 
 router.use(authenticateAdmin)
 
 router.post('/update', validateBody(adminUpdateSchema), updateAdmin);
-router.get('/count', validateBody(z.object({
+router.post('/count', validateBody(z.object({
   filter_by: z.enum(['day', 'week', 'month', 'year', 'total']),
   entity: z.enum(['users', 'artists', 'albums', 'songs', 'movies'])
 }))
   , getCount);
-router.get('/all-users', getAllUsersList)
+router.post('/all-users', getAllUsersList)
 router.get('/users-by-login', usersByLogin);
 
 
 router.post('/create-block', validateBody(addBlockSchema), createBlock);
-router.put('/update-block/:blockId', validateBody(updateBlockSchema), updateBlock);
-router.put('/add-data-to-block/:blockId', validateBody(updateBlockDataSchema), addDataToBlock);
-router.put('/remove-data-from-block/:blockId', validateBody(updateBlockDataSchema), removeDataFromBlock); // Assuming this is for updating data in a block
-router.delete('/delete-block/:blockId', deleteBlock); // Assuming this is for deleting a block, you might want to change the controller function name
+router.post('/update-block', validateBody(updateBlockSchema), updateBlock);
+router.post('/add-data-to-block', validateBody(updateBlockDataSchema), addDataToBlock);
+router.post('/remove-data-from-block', validateBody(updateBlockDataSchema), removeDataFromBlock); // Assuming this is for updating data in a block
+router.post('/delete-block', deleteBlock); // Assuming this is for deleting a block, you might want to change the controller function name
 
 router.post('/upload-song', validateBody(uploadMusicSchema), createMusic);
-router.put('/update-song/:song_id', validateBody(updateMusicSchema), updateSong);
+router.post('/update-song', validateBody(updateMusicSchema), updateSong);
 
 
 router.post('/create-artist', validateBody(SigninSchema), createArtist);
-router.put('/update-artist/:artist_id', validateBody(updateUserSchema), updateArtist);
-router.get('/get-all-artists', validateBody(paginationSchema), getArtists);
-router.delete('/delete-artist/:artist_id', deleteArtist);
+router.post('/update-artist', validateBody(updateUserSchema), updateArtist);
+router.post('/get-all-artists', validateBody(paginationSchema), getArtists);
+router.post('/delete-artist', validateBody(z.object({ user_id: z.string().min(1, 'user_id is required.') })), deleteArtist);
 
 
-router.post('/create-genre', validateBody(CreateGenreCategoryValidator), createGenre);
-router.delete('/delete-genre/:genre_id', removeGenre);
+router.post('/create-genre', validateBody(CreateGenreSchema), createGenre);
+router.post('/update-genre', validateBody(updateGenreSchema), updateGenre);
+router.post('/delete-genre', validateBody(z.object({ genre_id: z.string().min(1, 'genre_id is required.') })), removeGenre);
 
 
 router.post('/create-album', validateBody(createAlbumSchema), createAlbum);
-router.put('/update-album/:album_id', validateBody(updateAlbumSchema), updateAlbum);
-router.put('/add-Songs-to-album/:album_id', validateBody(addOrRemoveSongsFromAlbumSchema), addSongsToAlbum);
-router.put('/remove-Songs-from-album/:album_id', validateBody(addOrRemoveSongsFromAlbumSchema), removeSongsFromAlbum);
-router.get('/get-all-albums', getAllAlbums);
+router.post('/update-album', validateBody(updateAlbumSchema), updateAlbum);
+router.post('/add-Songs-to-album', validateBody(addOrRemoveSongsFromAlbumSchema), addSongsToAlbum);
+router.post('/remove-Songs-from-album', validateBody(addOrRemoveSongsFromAlbumSchema), removeSongsFromAlbum);
+router.post('/get-all-albums', getAllAlbums);
 
 
 router.post('/create-movie', validateBody(createMovieSchema), createMovie);
-router.put('/update-movie/:movieId', validateBody(updateMovieSchema), updateMovie);
-router.delete('/delete-movie/:movieId', deleteMovie);
-router.put('/add-songs-to-movie/:movieId', validateBody(addOrRemoveSongsFromAlbumSchema), addSongsToMovie);
-router.put('/remove-songs-from-movie/:movieId', validateBody(addOrRemoveSongsFromAlbumSchema), removeSongsFromMovie);
+router.post('/update-movie', validateBody(updateMovieSchema), updateMovie);
+router.post('/delete-movie', deleteMovie);
+router.post('/add-songs-to-movie', validateBody(addOrRemoveSongsFromMovieSchema), addSongsToMovie);
+router.post('/remove-songs-from-movie', validateBody(addOrRemoveSongsFromMovieSchema), removeSongsFromMovie);
 
 export default router;

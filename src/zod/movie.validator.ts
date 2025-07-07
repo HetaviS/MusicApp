@@ -10,6 +10,7 @@ export const createMovieSchema = z.object({
 });
 
 export const updateMovieSchema = z.object({
+    movie_id: z.string({ required_error: 'movie_id is required' }),
     title: z
         .string({ required_error: 'Title is required' })
         .min(1, 'Title is required')
@@ -19,3 +20,9 @@ export const updateMovieSchema = z.object({
         .optional()
 });
 
+export const addOrRemoveSongsFromMovieSchema = z.object({
+    movie_id: z.string({ required_error: 'movie_id is required' }),
+    songIds: z
+        .array(z.string())
+        .min(1, 'At least one song is required')
+})
