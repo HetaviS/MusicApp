@@ -1,6 +1,6 @@
 import { Album, AlbumSongs } from "../models";
 import { IAlbum, ISong } from "../types";
-import {Sequelize } from 'sequelize';
+import { Sequelize } from 'sequelize';
 
 async function createAlbum(albumPayload: Partial<IAlbum>): Promise<IAlbum | null> {
     try {
@@ -56,7 +56,7 @@ async function getAlbum(where: Partial<IAlbum>, include?: any): Promise<IAlbum |
     }
 }
 
-async function getAllAlbums( page: number = 1, pageSize: number = 10): Promise<IAlbum[]> {
+async function getAllAlbums(page: number = 1, pageSize: number = 10): Promise<IAlbum[]> {
     try {
         const offset = (page - 1) * pageSize;
         const albums = await Album.findAll({
@@ -64,15 +64,15 @@ async function getAllAlbums( page: number = 1, pageSize: number = 10): Promise<I
             offset,
             attributes: {
                 include: [
-                [Sequelize.fn('COUNT', Sequelize.col('songs.song_id')), 'song_count']
+                    [Sequelize.fn('COUNT', Sequelize.col('songs.song_id')), 'song_count']
                 ]
             },
             include: [
                 {
-                model: AlbumSongs,
-                as: 'songs',
-                attributes: [], // Don't fetch song data, just use for count
-                required: false
+                    model: AlbumSongs,
+                    as: 'songs',
+                    attributes: [], // Don't fetch song data, just use for count
+                    required: false
                 }
             ],
             group: ['Album.album_id'], // Only primary key here
@@ -80,11 +80,24 @@ async function getAllAlbums( page: number = 1, pageSize: number = 10): Promise<I
         });
 
 
-        return albums.map(album => album.toJSON() );
+        return albums.map(album => album.toJSON());
     }
     catch (err) {
         throw err;
     }
 }
 
-export default { createAlbum, addSongsToAlbum, removeSongsFromAlbum, updateAlbum, getAlbum ,getAllAlbums};
+async function getAlbumData(where: Partial<IAlbum>, include?: any): Promise<any[] | null> {
+    try {
+        const album = await AlbumSongs.findAll({
+            where: where, include
+        });
+        if (!album) return null;
+        return album.map(entry => entry.toJSON());
+    }
+    catch (err) {
+        throw err;
+    }
+}
+
+export default { createAlbum, addSongsToAlbum, removeSongsFromAlbum, updateAlbum, getAlbum, getAlbumData, getAllAlbums };

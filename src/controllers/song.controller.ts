@@ -6,7 +6,6 @@ import { logger } from "../utils";
 import { config } from "../config";
 import fs from 'fs'
 import { Genre, Movie, MovieSongConnection, MusicSinger } from "../models";
-import { log } from "console";
 
 async function getSong(req: Request, res: Response) {
     try {

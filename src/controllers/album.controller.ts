@@ -3,8 +3,7 @@ import { album_service, response_service } from "../services/index.service";
 import { logger } from "../utils";
 import { config } from "../config";
 import fs from "fs";
-import { AlbumSongs, Genre, Movie, MovieSongConnection, MusicSinger, Song } from "../models";
-import { log } from "console";
+import { AlbumSongs, Genre, Movie, MovieSongConnection, MusicSinger, Song, User } from "../models";
 
 async function createAlbum(req: Request, res: Response) {
     try {
@@ -112,9 +111,6 @@ async function updateAlbum(req: Request, res: Response) {
         if (files?.['album_thumbnail']) del_album = album.thumbnail
 
         const album_data = { ...req.body, thumbnail: files?.['album_thumbnail']?.[0].path };
-        log("album_data")
-        log(album_data)
-        // 
         album = await album_service.updateAlbum(album_data, { album_id: req.body.album_id });
         if (!album) return response_service.badRequestResponse(res, 'Failed to update album.');
         if (del_album) {
@@ -134,38 +130,46 @@ async function updateAlbum(req: Request, res: Response) {
 async function getAlbum(req: Request, res: Response) {
     try {
         const user = req.user;
-        const album = await album_service.getAlbum({ album_id: req.body.album_id }, [
+        const album = await album_service.getAlbumData({ album_id: req.body.album_id }, [
             {
-                model: AlbumSongs,
-                as: 'songs',
-                include: [{
-                    model: Song,
-                    as: 'song',
-                    include: [
-                        {
-                            model: Genre,
-                            as: 'genre'
-                        },
-                        {
-                            model: MusicSinger,
-                            as: 'artists',
-                        },
-                        {
-                            model: MovieSongConnection,
-                            as: 'movie',
-                            include: [{
-                                model: Movie,
-                                as: 'movie_details'
-                            }]
-                        }
-                    ]
-                }]
+                model: Song,
+                as: 'song',
+                include: [
+                    {
+                        model: Genre,
+                        as: 'genre',
+                        attributes: ['genre_id', 'name']
+                    },
+                    {
+                        model: MusicSinger,
+                        as: 'artists',
+                        attributes: ['music_singer_id'],
+                        include: [
+                            {
+                                model: User,
+                                as: 'singer',
+                                attributes: ['user_id', 'full_name', 'profile_pic'],
+                            }
+                        ]
+                    },
+                    {
+                        model: MovieSongConnection,
+                        as: 'movie',
+                        attributes: ['movie_song_id'],
+                        include: [{
+                            model: Movie,
+                            as: 'movie_details',
+                            attributes: ['movie_id', 'title', 'poster']
+                        }]
+                    }
+                ]
             }
         ]);
-        if (!album) return response_service.badRequestResponse(res, 'You are not the owner of this album.');
-        if (!album.is_private || album.user_id == req.user.user_id) {
-            return response_service.successResponse(res, 'Album fetched successfully.', album);
-        }
+
+        // if (!album) return response_service.badRequestResponse(res, 'You are not the owner of this album.');
+        // if (!album.is_private || album.user_id == req.user.user_id) {
+        // }
+        return response_service.successResponse(res, 'Album fetched successfully.', album);
         return response_service.badRequestResponse(res, 'You are not the owner of this album.');
     }
     catch (err: any) {

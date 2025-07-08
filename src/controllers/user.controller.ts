@@ -5,7 +5,6 @@ import removeExtraFields from "../services/common/removeExtraFields.service";
 import * as fs from 'fs';
 import { getAvatar } from "../services/avatar.service";
 import { config } from "../config";
-import { log } from "console";
 
 
 async function getUser(req: Request, res: Response) {

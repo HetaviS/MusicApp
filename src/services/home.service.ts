@@ -1,4 +1,3 @@
-import { log } from 'console';
 import { Album, Genre, HomeBlocks, MusicSinger, Song, User } from '../models';
 import { IHomeBlocks, ISong } from '../types';
 import removeExtraFields from './common/removeExtraFields.service';
@@ -121,11 +120,11 @@ async function getAllBlocks(): Promise<{ blocks: Partial<IHomeBlocks>[] }> {
                 'title',
                 'subtitle',
                 'order_id',
-                [Sequelize.fn('array_length', Sequelize.col('album_ids'), 1), 'album_count'],
-                [Sequelize.fn('array_length', Sequelize.col('song_ids'), 1), 'song_count'],
-                [Sequelize.fn('array_length', Sequelize.col('genre_ids'), 1), 'genre_count'],
-                [Sequelize.fn('array_length', Sequelize.col('artist_ids'), 1), 'artist_count'],
-
+                'is_visible',
+                [Sequelize.literal('COALESCE(array_length("album_ids", 1), 0)'), 'album_count'],
+                [Sequelize.literal('COALESCE(array_length("song_ids", 1), 0)'), 'song_count'],
+                [Sequelize.literal('COALESCE(array_length("genre_ids", 1), 0)'), 'genre_count'],
+                [Sequelize.literal('COALESCE(array_length("artist_ids", 1), 0)'), 'artist_count'],
             ]
         });
 
@@ -136,27 +135,24 @@ async function getAllBlocks(): Promise<{ blocks: Partial<IHomeBlocks>[] }> {
         throw err;
     }
 }
-async function getBlock(blockId: number, limits: { album?: number, song?: number, genre?: number, artist?: number }, page: number = 1, pageSize: number = 10): Promise<Partial<IHomeBlocks> | null> {
+async function getBlock(blockId: number, limits: { album?: number, song?: number, genre?: number, artist?: number }, page: number = 1, pageSize: number = 20): Promise<Partial<IHomeBlocks> | null> {
     try {
         const block = await HomeBlocks.findByPk(blockId) as any;
         if (!block) return null;
-
-        // Count how many categories are present to split the pageSize accordingly
-        const categoriesCount = (block.album_ids?.length ? 1 : 0)
-            + (block.song_ids?.length ? 1 : 0)
-            + (block.genre_ids?.length ? 1 : 0)
-            + (block.artist_ids?.length ? 1 : 0);
-
+        
         let start = (page - 1) * pageSize;
         let end = start + pageSize;
-
+        
         let data: any[] = [];
         let total = 0;
+        let album_count = block.album_ids?.length ?? 0, song_count = block.song_ids?.length ?? 0, genre_count = block.genre_ids?.length ?? 0, artist_count = block.artist_ids?.length ?? 0;
+
         const isMix = block.type === 'mix';
         if (block.type === 'album' || (isMix && limits['album'])) {
             if (limits['album']) {
                 start = (page - 1) * limits['album'];
                 end = start + limits['album'];
+
             }
             const allIds = block.album_ids || [];
             const paginatedIds = allIds.slice(start, end);
@@ -248,12 +244,17 @@ async function getBlock(blockId: number, limits: { album?: number, song?: number
             subtitle: block.subtitle,
             description: block.description,
             type: block.type,
+            album_count,
+            song_count,
+            genre_count,
+            artist_count,
+            is_visible: block.is_visible,
             order_id: block.order_id,
-            data:data.sort(() => Math.random() - 0.5),
+            data: data.sort(() => Math.random() - 0.5),
             pagination: {
-                page:parseInt(page.toString()),
+                page: parseInt(page.toString()),
                 pageSize: parseInt(isMix ? data.length.toString() : pageSize.toString()),
-                total:parseInt(total.toString()),
+                total: parseInt(total.toString()),
                 totalPages: Math.ceil(total / pageSize),
             }
         } as Partial<IHomeBlocks>;

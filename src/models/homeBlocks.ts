@@ -54,7 +54,11 @@ const HomeBlocks = sequelize.define('HomeBlocks', {
     order_id: {
         type: DataTypes.INTEGER,
         allowNull: true,
-    }
+    },
+    is_visible: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+    },
 }, {
     tableName: 'homeBlocks',
     timestamps: true,

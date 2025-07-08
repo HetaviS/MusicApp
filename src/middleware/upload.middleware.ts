@@ -1,5 +1,3 @@
-import { log } from 'console';
-import { logger } from '../utils';
 import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -37,7 +35,7 @@ const storage = multer.diskStorage({
     filename: (req, file, cb): void => {
         const ext = path.extname(file.originalname);
         const baseName = path.basename(file.originalname, ext);
-        const filename = `${Date.now()}-${baseName}${ext}`;
+        const filename = `${Date.now()}-${baseName.replace(" ", "-")}${ext}`;
         return cb(null, filename);
     }
 });

@@ -1,4 +1,3 @@
-import { log } from 'console';
 import { Album, Downloads, Favourites, Song } from '../models';
 import { User } from '../models/user';
 import { IUser } from '../types';
