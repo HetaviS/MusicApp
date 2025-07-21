@@ -1,6 +1,7 @@
-import { MusicSinger, Genre, Favourites, User } from "../models";
+import { MusicSinger, Genre, favorites, User, favoriteArtists } from "../models";
 import { Song } from "../models";
 import { ISong } from "../types";
+import { user_service } from "./index.service";
 
 async function addSongToArtist(songId: number, artistId: number) {
     try {
@@ -26,7 +27,7 @@ async function addSong(song: Partial<ISong>): Promise<ISong | null> {
 }
 
 interface PaginatedMySongsResult {
-  data: (ISong & { favourites_count: number })[];
+  data: (ISong & { favorites_count: number })[];
   total: number;
   page: number;
   pageSize: number;
@@ -67,7 +68,7 @@ async function mySongs(
     const data = await Promise.all(
       rows.map(async (record) => {
         const songData = record.get({ plain: true });
-        const favourites_count = await Favourites.count({
+        const favourites_count = await favorites.count({
           where: { song_id: songData.song.song_id },
         });
         return { singer:songData.singer, ...songData.song, favourites_count };
@@ -107,10 +108,92 @@ async function isSinger(userId: number): Promise<boolean> {
     }
 }
 
+async function isfavorite(userId: number, artistId: number): Promise<boolean> {
+    try {
+        const favorite = await favoriteArtists.findOne({ where: { user_id: userId, artist_user_id: artistId } });
+        return !!favorite;
+    } catch (err) {
+        throw err;
+    }
+}
+
+async function setfavorite(userId: number, artistId: number): Promise<boolean> {
+    try {
+        const favorite = await favoriteArtists.findOne({ where: { user_id: userId, artist_user_id: artistId } });
+        if (favorite) {
+            await favoriteArtists.destroy({ where: { user_id: userId, artist_user_id: artistId } });
+            return false;
+        }
+        else {
+            await favoriteArtists.create({ user_id: userId, artist_user_id  : artistId });
+            return true;
+        }
+    } catch (err) {
+        throw err;
+    }
+}
+
+  async function getFavoriteArtists(
+  userId: number,
+  page: number = 1,
+  limit: number = 10
+): Promise<{
+  artists: any[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+} | null> {
+  try {
+    const offset = (page - 1) * limit;
+
+    // Count total favorite artists for pagination
+    const total = await favoriteArtists.count({
+      where: { user_id: userId },
+    });
+
+    // Fetch artist_user_ids
+    const rows = await favoriteArtists.findAll({
+      where: { user_id: userId },
+      attributes: ['artist_user_id'],
+      limit,
+      offset,
+    });
+
+    // Resolve all artist details
+    const artists = await Promise.all(
+      rows.map((row) => {
+        const { artist_user_id } = row.toJSON();
+        return user_service.getUser(
+          { user_id: artist_user_id.toString() },
+          [],
+          ['user_id', 'full_name', 'profile_pic']
+        );
+      })
+    );
+
+    return {
+      artists,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  } catch (err) {
+    console.error('Error in getFavoriteArtists:', err);
+    throw err;
+  }
+}
+
+
+
 export default {
     addSongToArtist,
     addSong,
     mySongs,
     isMySong,
-    isSinger
+    isSinger,
+    isfavorite,
+    setfavorite,
+    getFavoriteArtists
 }

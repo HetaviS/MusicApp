@@ -11,15 +11,34 @@ async function addToHistory(songId: number, userId: number, albumId?: number | n
     }
 }
 
-async function getUserHistory(userId: number): Promise<IHistory[] | null> {
-    try {
-        const history = await History.findAll({ where: { user_id: userId }, include: ['song', 'album'], order: [['createdAt', 'DESC']] });
-        if (history) return history.map(entry => entry.toJSON() as IHistory);
-        return null;
-    } catch (err) {
-        throw err;
-    }
+
+async function getUserHistory(
+  userId: number,
+  page: number = 1,
+  pageSize: number = 10
+): Promise<{ data: IHistory[]; total: number; page: number; pageSize: number } | null> {
+  try {
+    const offset = (page - 1) * pageSize;
+
+    const { count, rows } = await History.findAndCountAll({
+      where: { user_id: userId },
+      include: ['song', 'album'],
+      order: [['createdAt', 'DESC']],
+      offset,
+      limit: pageSize,
+    });
+
+    return {
+      data: rows.map(entry => entry.toJSON() as IHistory),
+      total: count,
+      page,
+      pageSize,
+    };
+  } catch (err) {
+    throw err;
+  }
 }
+
 
 async function updateHistoryTime(history_id: number, time: string): Promise<IHistory | null> {
     try {

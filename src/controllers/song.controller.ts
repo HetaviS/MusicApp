@@ -1,4 +1,4 @@
-import { response_service, singer_service, song_service } from "../services/index.service";
+import { response_service, singer_service, song_service, user_service } from "../services/index.service";
 import { getAudioDuration } from "../utils/audioDuration";
 import removeExtraFields from "../services/common/removeExtraFields.service";
 import { Request, Response } from 'express';
@@ -28,24 +28,24 @@ async function getSong(req: Request, res: Response) {
             }]
         );
         if (!song) return response_service.notFoundResponse(res, 'Song not found.');
-        const is_favourite = await song_service.isFavourite(parseInt(req.body.song_id), req.user?.user_id);
-        return response_service.successResponse(res, 'Song fetched successfully.', { ...song, is_favourite });
+        const is_favorite = await song_service.isfavorite(parseInt(req.body.song_id), req.user?.user_id);
+        return response_service.successResponse(res, 'Song fetched successfully.', { ...song, is_favorite });
     } catch (err: any) {
         logger.error('Error fetching song:', err);
         return response_service.internalServerErrorResponse(res, err.message);
     }
 }
 
-async function setFavourite(req: Request, res: Response) {
+async function setfavorite(req: Request, res: Response) {
     try {
         const user = req.user;
         const songId = parseInt(req.body.song_id);
         const song = await song_service.getSong(songId);
         if (!song) return response_service.notFoundResponse(res, 'Song not found.');
-        const isFavourite = await song_service.setFavourite(user.user_id, songId);
-        return response_service.successResponse(res, `Song marked as favourite: ${isFavourite}.`);
+        const isfavorite = await song_service.setfavorite(user.user_id, songId);
+        return response_service.successResponse(res, `Song marked as favorite: ${isfavorite}.`);
     } catch (err: any) {
-        logger.error('Error setting favourite:', err);
+        logger.error('Error setting favorite:', err);
         return response_service.internalServerErrorResponse(res, err.message);
     }
 }
@@ -67,9 +67,17 @@ async function setDownloaded(req: Request, res: Response) {
 
 async function getMySongs(req: Request, res: Response) {
     try {
+        const artist = await user_service.getUser({ user_id: req.body.artist_id, is_singer: true },[],['user_id','full_name', 'profile_pic']);
+        if (!artist) return response_service.notFoundResponse(res, 'Artist not found.');
+        const is_favorite = await singer_service.isfavorite(req.user.user_id, req.body.artist_id);
         const songs = await singer_service.mySongs(parseInt(req.body.artist_id), req.body.page, req.body.limit);
+        await Promise.all(songs.data.map(async (song: any) => {
+            const is_favorite = await song_service.isfavorite(song.song_id, req.user?.user_id);
+            return { ...song, is_favorite };
+        }));
+        
         if (songs) {
-            return response_service.successResponse(res, 'Songs fetched successfully.', songs);
+            return response_service.successResponse(res, 'Songs fetched successfully.',songs.data );
         }
         return response_service.badRequestResponse(res, 'Failed to fetch songs.');
     } catch (err: any) {
@@ -148,13 +156,34 @@ async function getNextSong(req: Request, res: Response) {
         let song_id = song_ids[Math.floor(Math.random() * song_ids.length)];
         const song = await song_service.getSong(parseInt(song_id));
         if (!song) return response_service.notFoundResponse(res, 'Song not found.');
-        const is_favourite = await song_service.isFavourite(parseInt(song_id), req.user?.user_id);
-        return response_service.successResponse(res, 'Song fetched successfully.', { ...song, is_favourite });
+        const is_favorite = await song_service.isfavorite(parseInt(song_id), req.user?.user_id);
+        return response_service.successResponse(res, 'Song fetched successfully.', { ...song, is_favorite });
     } catch (err: any) {
         logger.error('Error fetching next song:', err);
         return response_service.internalServerErrorResponse(res, err.message);
     }
 }
 
+async function getfavoriteSongs(req: Request, res: Response) {
+    try {
+        const songs = await song_service.getfavoriteSongs(req.user?.user_id, req.body.page, req.body.limit);
+        if (!songs) return response_service.notFoundResponse(res, 'Songs not found.');
+        return response_service.successResponse(res, 'Songs fetched successfully.', songs);
+    } catch (err: any) {
+        logger.error('Error fetching favorite songs:', err);
+        return response_service.internalServerErrorResponse(res, err.message);
+    }
+}
 
-export { getSong, setFavourite, setDownloaded, getMySongs, createMusic, updateSong, getNextSong };
+async function getAllSongs(req: Request, res: Response) {
+    try {
+        const songs = await song_service.getAllSongs(req.body.album_id, req.body.page, req.body.limit);
+        if (!songs) return response_service.notFoundResponse(res, 'Songs not found.');
+        return response_service.successResponse(res, 'Songs fetched successfully.', songs);
+    } catch (err: any) {
+        logger.error('Error fetching all songs:', err);
+        return response_service.internalServerErrorResponse(res, err.message);
+    }
+}
+
+export { getSong, setfavorite, setDownloaded, getMySongs, createMusic, updateSong, getNextSong, getfavoriteSongs, getAllSongs };

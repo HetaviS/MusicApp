@@ -4,8 +4,8 @@ import { logger } from "../utils";
 
 export async function search(req: Request, res: Response) {
     try {
-        const { query, page = 1, limit = 10 } = req.body;
-        const searchResults = await explore_service.search(query, page, limit);
+        const { query, type, page = 1, limit = 10 } = req.body;
+        const searchResults = await explore_service.search(query, type, page, limit);
         if (!searchResults || searchResults.length === 0) {
             return response_service.notFoundResponse(res, 'No results found for the given query.');
         }

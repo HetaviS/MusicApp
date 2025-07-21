@@ -9,7 +9,7 @@ export const createAlbumSchema = z.object({
         .min(1, 'Title is required'),
     songs: z
         .array(z.string())
-        .min(1, 'At least one song is required'),
+        .min(1, 'At least one song is required').optional(),
     description: z.string().optional(),
     is_private: z.string({
         required_error: 'is_private is required',

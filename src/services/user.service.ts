@@ -1,18 +1,14 @@
-import { Album, Downloads, Favourites, Song } from '../models';
+import { Album, Downloads, favorites, MusicSinger, Song } from '../models';
 import { User } from '../models/user';
 import { IUser } from '../types';
 import removeExtraFields from './common/removeExtraFields.service';
 
-async function getUser(data: Partial<IUser>): Promise<IUser | null> {
+async function getUser(data: Partial<IUser>, include?: any,attributes?: any): Promise<IUser | null> {
     try {
         const user = await User.findOne({
             where: data,
-            include: [
-                { model: Song, as: 'currentSong' },
-                { model: Album, as: 'currentAlbum' },
-                { model: Favourites, as: 'favourites' },
-                { model: Downloads, as: 'downloads' }
-            ]
+            include,
+            attributes
         });
         if (!user) return null;
         return removeExtraFields(user.toJSON(), [

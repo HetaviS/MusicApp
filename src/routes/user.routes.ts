@@ -3,6 +3,7 @@ import { getUser, updateCurrentsong, updateSongTime, updateUser, userHistory, va
 import { Router } from "express";
 import { validateBody } from "../middleware/zod.middleware";
 import { updateCurrentSongSchema, updateUserSchema, updateSongTimeSchema, validateUsernameSchema } from "../zod/user.validator";
+import z from "zod";
 
 const router = Router();
 
@@ -11,7 +12,7 @@ router.use(authenticate)
 router.get('/profile', getUser);
 router.post('/update', validateBody(updateUserSchema), updateUser);
 router.post('/update-current-song', validateBody(updateCurrentSongSchema), updateCurrentsong);
-router.get('/history', userHistory); // Uncomment if you have a history controller
+router.post('/history', validateBody(z.object({ page: z.string().optional(), limit: z.string().optional() })), userHistory); // Uncomment if you have a history controller
 router.post('/update-song-time', validateBody(updateSongTimeSchema), updateSongTime); // Uncomment if you have a song time update controller
 
 export default router;

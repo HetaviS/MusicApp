@@ -12,6 +12,7 @@ import dashboard_service from './dashboard.service';
 import explore_service from './explore.service';
 import movie_service from './movie.service';
 import { getAllAvatars } from './avatar.service';
+import searchHistory_service from './searchHistory.service';
 
 export {
     response_service,
@@ -27,5 +28,6 @@ export {
     admin_service,
     dashboard_service,
     movie_service,
-    getAllAvatars
+    getAllAvatars,
+    searchHistory_service
 };

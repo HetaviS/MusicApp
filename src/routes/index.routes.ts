@@ -10,6 +10,8 @@ import home_routes from './home.routes';
 import explore_routes from './explore.routes';
 import movie_routes from './movie.routes';
 import { uploadDocs } from '../middleware/upload.middleware';
+import artist_routes from './artist.routes';
+import searchHistory_routes from './searchHistory.routes';
 
 const router = Router();
 
@@ -25,5 +27,6 @@ router.use('/avatar', avatar_routes);
 router.use('/home', home_routes);
 router.use('/explore', explore_routes);
 router.use('/movie', movie_routes);
-
+router.use('/artist', artist_routes);
+router.use('/search-history', searchHistory_routes);
 export default router;

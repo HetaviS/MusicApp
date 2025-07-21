@@ -34,13 +34,14 @@ export interface ISong {
     artists?: IMusicSinger[]; // Assuming singer is a string, could be an ObjectId or reference to another model
     category_id: string;
     duration: string;
+    is_favorite?: boolean;
     movie?: IMovie;
     createdAt?: Date;
     updatedAt?: Date;
 }
 
-export interface IFavourite {
-    favourite_id: string;
+export interface Ifavorite {
+    favorite_id: string;
     user_id: string;
     song_id: string;
     createdAt?: Date;
@@ -70,12 +71,13 @@ export interface IAlbum {
     is_private: boolean;
     descrption: string;
     songs: ISong[];
+    is_album_liked?: boolean;
     user_id: string;
     createdAt?: Date;
     updatedAt?: Date;
 }
 
-export interface IFavourites {
+export interface Ifavorites {
     user_id: string;
     song_id: string;
     createdAt?: Date;

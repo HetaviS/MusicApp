@@ -39,8 +39,8 @@ router.get('/users-by-login', usersByLogin);
 router.post('/create-block', validateBody(addBlockSchema), createBlock);
 router.post('/update-block', validateBody(updateBlockSchema), updateBlock);
 router.post('/add-data-to-block', validateBody(updateBlockDataSchema), addDataToBlock);
-router.post('/remove-data-from-block', validateBody(updateBlockDataSchema), removeDataFromBlock); // Assuming this is for updating data in a block
-router.post('/delete-block', deleteBlock); // Assuming this is for deleting a block, you might want to change the controller function name
+router.post('/remove-data-from-block', validateBody(updateBlockDataSchema), removeDataFromBlock); 
+router.post('/delete-block', deleteBlock);
 
 router.post('/upload-song', validateBody(uploadMusicSchema), createMusic);
 router.post('/update-song', validateBody(updateMusicSchema), updateSong);

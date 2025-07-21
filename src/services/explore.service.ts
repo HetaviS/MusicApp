@@ -17,59 +17,80 @@ interface SearchResult {
   };
 }
 
-async function search(searchTerm: string, page: number = 1, limit: number = 10): Promise<SearchResult> {
+async function search(
+  searchTerm: string,
+  type?: 'song' | 'artist' | 'album',
+  page: number = 1,
+  limit: number = 10
+): Promise<SearchResult> {
   try {
     const offset = (page - 1) * limit;
 
-    const [songsResult, artistsResult, albumsResult] = await Promise.all([
-      Song.findAndCountAll({
+    // Initialize result structure
+    const result: SearchResult = {
+      length: 0,
+      songs: { data: [], total: 0 },
+      artists: { data: [], total: 0 },
+      albums: { data: [], total: 0 }
+    };
+
+    if (!type || type === 'song') {
+      const songsResult = await Song.findAndCountAll({
         where: {
           title: {
-            [Op.iLike]: `%${searchTerm}%`
+            [Op.iLike]: `${searchTerm}%`
           }
         },
         limit,
         offset
-      }),
-      User.findAndCountAll({
+      });
+      result.songs = {
+        data: songsResult.rows.map(song => song.toJSON()),
+        total: songsResult.count
+      };
+      result.length += songsResult.count;
+    }
+
+    if (!type || type === 'artist') {
+      const artistsResult = await User.findAndCountAll({
         where: {
           full_name: {
-            [Op.iLike]: `%${searchTerm}%`
+            [Op.iLike]: `${searchTerm}%`
           },
           is_singer: true
         },
         limit,
         offset
-      }),
-      Album.findAndCountAll({
+      });
+      result.artists = {
+        data: artistsResult.rows.map(artist => artist.toJSON()),
+        total: artistsResult.count
+      };
+      result.length += artistsResult.count;
+    }
+
+    if (!type || type === 'album') {
+      const albumsResult = await Album.findAndCountAll({
         where: {
           title: {
-            [Op.iLike]: `%${searchTerm}%`
+            [Op.iLike]: `${searchTerm}%`
           }
         },
         limit,
         offset
-      })
-    ]);
-
-    return {
-      length: songsResult.count + artistsResult.count + albumsResult.count,
-      songs: {
-        data: songsResult.rows.map(song => song.toJSON()),
-        total: songsResult.count
-      },
-      artists: {
-        data: artistsResult.rows.map(artist => artist.toJSON()),
-        total: artistsResult.count
-      },
-      albums: {
+      });
+      result.albums = {
         data: albumsResult.rows.map(album => album.toJSON()),
         total: albumsResult.count
-      }
-    };
+      };
+      result.length += albumsResult.count;
+    }
+
+    return result;
   } catch (err) {
     throw err;
   }
 }
+
 
 export default{ search};

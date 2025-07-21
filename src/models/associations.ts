@@ -4,12 +4,14 @@ import { MusicSinger } from './musicSinger';
 import { Album } from './album';
 import { AlbumSongs } from './albumSong';
 import { Genre } from './genre';
-import { Favourites } from './favourites';
+import { favorites } from './favorites';
 import { Downloads } from './downloads';
 // import { Categories } from './categories';
 import { History } from './history';
 import { Movie } from './movie';
 import { MovieSongConnection } from './movieSongConnetion';
+import { favoriteAlbums } from './favoriteAlbums';
+import { favoriteArtists } from './favoriteArtitsts';
 
 // Define all associations here after all models are imported
 export const setupAssociations = () => {
@@ -39,34 +41,50 @@ export const setupAssociations = () => {
         onUpdate: 'CASCADE'
     });
 
-    User.hasMany(Favourites, {
+    User.hasMany(favorites, {
         foreignKey: 'user_id',
-        as: 'favourites',
+        as: 'favorites',
     });
-
-    // Favourites.hasMany(User, {
-    //     foreignKey: 'user_id',
-    //     as: 'user',
-    // });
-    // Favourites.hasMany(Song, {
-    //     foreignKey: 'song_id',
-    //     as: 'song',
-    // });
 
     User.hasMany(Downloads, {
         foreignKey: 'user_id',
         as: 'downloads',
     });
 
-    Song.hasMany(Favourites, {
+    Song.hasMany(favorites, {
         foreignKey: 'song_id',
         as: 'downloadedBy',
     });
 
     Song.hasMany(Downloads, {
         foreignKey: 'song_id',
-        as: 'favouriteBy',
+        as: 'favoriteBy',
     });
+
+    // favorites belongs to Song
+    favorites.belongsTo(Song, {
+        foreignKey: 'song_id',
+        as: 'song',
+    });
+
+    // favorites belongs to User
+    favorites.belongsTo(User, {
+        foreignKey: 'user_id',
+        as: 'user',
+    });
+
+    // Downloads belongs to Song
+    Downloads.belongsTo(Song, {
+        foreignKey: 'song_id',
+        as: 'song',
+    });
+
+    // Downloads belongs to User
+    Downloads.belongsTo(User, {
+        foreignKey: 'user_id',
+        as: 'user',
+    });
+
     // Song has many MusicSinger records (multiple artists per song)
     Song.hasMany(MusicSinger, {
         foreignKey: 'song_id',
@@ -193,5 +211,25 @@ export const setupAssociations = () => {
         foreignKey: 'album_id',
         as: 'album',
     });
-        
+
+    User.hasMany(favoriteAlbums, {
+        foreignKey: 'user_id',
+        as: 'favoriteAlbums',
+    });
+
+    Song.hasMany(favoriteAlbums, {
+        foreignKey: 'album_id',
+        as: 'favoriteAlbumBy',
+    });
+
+    User.hasMany(favoriteArtists, {
+        foreignKey: 'artist_user_id',
+        as: 'favoriteArtistBy',
+    });
+
+    User.hasMany(favoriteArtists, {
+        foreignKey: 'user_id',
+        as: 'favoriteArtists',
+    });
+
 };

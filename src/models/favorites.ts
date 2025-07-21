@@ -1,8 +1,8 @@
 import { DataTypes } from 'sequelize';
 import { sequelize } from '../config/database';
 
-const Favourites = sequelize.define('Favourites', {
-    favourite_id: {
+const favorites = sequelize.define('favorites', {
+    favorite_id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
@@ -16,8 +16,8 @@ const Favourites = sequelize.define('Favourites', {
         allowNull: false,
     },
 }, {
-    tableName: 'favourites',
+    tableName: 'favorites',
     timestamps: true,
 });
 
-export { Favourites };
+export { favorites };

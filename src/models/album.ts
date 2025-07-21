@@ -10,7 +10,7 @@ const Album = sequelize.define('Album', {
     },
     title: { type: DataTypes.STRING, allowNull: false },
     description: { type: DataTypes.STRING, allowNull: false, defaultValue: "" }, // Fixed typo: descrption -> description
-    thumbnail: { type: DataTypes.STRING, allowNull: false,
+    thumbnail: { type: DataTypes.STRING, allowNull: true,
         get: function () {
             // Assuming config.clientUrl is defined in your configuration
             return this.getDataValue('thumbnail') ? config.clientUrl + this.getDataValue('thumbnail') : "";
@@ -20,7 +20,7 @@ const Album = sequelize.define('Album', {
     is_private: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     user_id: { // Add user_id field for the foreign key
         type: DataTypes.INTEGER,
-        allowNull: true,
+    allowNull: true,
     },
 }, {
     tableName: 'albums',

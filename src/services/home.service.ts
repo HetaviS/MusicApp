@@ -146,7 +146,6 @@ async function getBlock(blockId: number, limits: { album?: number, song?: number
         let data: any[] = [];
         let total = 0;
         let album_count = block.album_ids?.length ?? 0, song_count = block.song_ids?.length ?? 0, genre_count = block.genre_ids?.length ?? 0, artist_count = block.artist_ids?.length ?? 0;
-
         const isMix = block.type === 'mix';
         if (block.type === 'album' || (isMix && limits['album'])) {
             if (limits['album']) {

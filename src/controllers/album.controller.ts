@@ -3,7 +3,7 @@ import { album_service, response_service } from "../services/index.service";
 import { logger } from "../utils";
 import { config } from "../config";
 import fs from "fs";
-import { AlbumSongs, Genre, Movie, MovieSongConnection, MusicSinger, Song, User } from "../models";
+import { Album, AlbumSongs, Genre, Movie, MovieSongConnection, MusicSinger, Song, User } from "../models";
 
 async function createAlbum(req: Request, res: Response) {
     try {
@@ -16,17 +16,18 @@ async function createAlbum(req: Request, res: Response) {
 
         let songs = req.body.songs;
 
-        if (songs.length <= 0) return response_service.badRequestResponse(res, 'You can add only your own songs.');
+        // if (songs.length <= 0) return response_service.badRequestResponse(res, 'You can add only your own songs.');
         let album_data;
+        
         if (user.user_id) {
-            album_data = { ...req.body, thumbnail: files?.['album_thumbnail'][0].path, user_id: req.user.user_id };
+            album_data = { ...req.body, thumbnail: files?.['album_thumbnail']?.[0].path, user_id: req.user.user_id };
         }
         else {
-            album_data = { ...req.body, thumbnail: files?.['album_thumbnail'][0].path, }
+            album_data = { ...req.body, thumbnail: files?.['album_thumbnail']?.[0].path }
         }
         const album = await album_service.createAlbum(album_data);
         if (!album) return response_service.badRequestResponse(res, 'Failed to create album.');
-        await album_service.addSongsToAlbum(songs, album.album_id);
+        if (songs) await album_service.addSongsToAlbum(songs, album.album_id);
         return response_service.successResponse(res, 'Album created successfully.', album);
     }
     catch (err: any) {
@@ -40,15 +41,38 @@ async function addSongsToAlbum(req: Request, res: Response) {
         let user = req.user;
         let album;
         if (user.user_id) {
-            album = await album_service.getAlbum({ album_id: req.body.album_id, user_id: req.user.user_id });
+            album = await album_service.getAlbum({ album_id: req.body.album_id, user_id: req.user.user_id, is_private: true },[
+            {
+                model: AlbumSongs,
+                as: 'songs',
+                include: [{
+                    model: Song,
+                    as: 'song',
+                    attributes: ['song_id']
+                }]
+            }
+        ]);
         }
         else {
-            album = await album_service.getAlbum({ album_id: req.body.album_id });
+            album = await album_service.getAlbum({ album_id: req.body.album_id , is_private: false},[
+            {
+                model: AlbumSongs,
+                as: 'songs',
+                include: [{
+                    model: Song,
+                    as: 'song',
+                    attributes: ['song_id']
+                }]
+            }
+        ]);
         }
         if (!album) return response_service.badRequestResponse(res, 'Album not found.');
         let existing_songs = album.songs?.map((song: any) => song.song_id.toString());
-        let songs = req.body.songIds;
+        let songs = req.body.songIds || [];
+        let song_id = req.body.song_id;
+        if (song_id) songs.push(song_id);
         existing_songs = album.songs?.filter((song: any) => songs.includes(song.song_id.toString()))
+        
         if (existing_songs?.length > 0) return response_service.badRequestResponse(res, 'You can add only unique songs.');
 
 
@@ -81,8 +105,10 @@ async function removeSongsFromAlbum(req: Request, res: Response) {
         }
 
         if (!album) return response_service.badRequestResponse(res, 'Album not found.');
-
-        const songs = await album_service.removeSongsFromAlbum(req.body.songIds, req.body.album_id);
+        let songs = req.body.songIds || [];
+        let song_id = req.body.song_id;
+        if (song_id) songs.push(song_id);
+        songs = await album_service.removeSongsFromAlbum(songs, req.body.album_id);
 
         if (songs && songs[0] == 0) return response_service.badRequestResponse(res, 'Failed to remove songs from album.');
 
@@ -130,8 +156,12 @@ async function updateAlbum(req: Request, res: Response) {
 async function getAlbum(req: Request, res: Response) {
     try {
         const user = req.user;
-        const album = await album_service.getAlbumData({ album_id: req.body.album_id }, [
+        let albumData = await album_service.getAlbum({ album_id: req.body.album_id });
+        const is_album_liked = await album_service.isfavorite(user.user_id, req.body.album_id);
+
+        const album = await album_service.getAlbumData({ album_id: req.body.album_id }, user.user_id, [
             {
+
                 model: Song,
                 as: 'song',
                 include: [
@@ -169,8 +199,7 @@ async function getAlbum(req: Request, res: Response) {
         // if (!album) return response_service.badRequestResponse(res, 'You are not the owner of this album.');
         // if (!album.is_private || album.user_id == req.user.user_id) {
         // }
-        return response_service.successResponse(res, 'Album fetched successfully.', album);
-        return response_service.badRequestResponse(res, 'You are not the owner of this album.');
+        return response_service.successResponse(res, 'Album fetched successfully.', { album: { ...albumData, is_album_liked }, album_data: album });
     }
     catch (err: any) {
         logger.error('Error fetching album:', err);
@@ -185,8 +214,66 @@ async function getAllAlbums(req: Request, res: Response) {
         if (!albums) return response_service.notFoundResponse(res, 'Albums not found.');
         return response_service.successResponse(res, 'Albums fetched successfully.', albums);
     } catch (err: any) {
-
         logger.error('Error fetching albums:', err);
+        return response_service.internalServerErrorResponse(res, err.message);
+    }
+}
+
+async function setfavorite(req: Request, res: Response) {
+    try {
+        const user = req.user;
+        const albumId = req.body.album_id;
+        const song = await album_service.getAlbum({
+            album_id: albumId
+        });
+        if (!song) return response_service.notFoundResponse(res, 'Album not found.');
+        const isfavorite = await album_service.setfavorite(user.user_id, albumId);
+        return response_service.successResponse(res, `Album marked as favorite: ${isfavorite}.`);
+    } catch (err: any) {
+        logger.error('Error setting favorite:', err);
+        return response_service.internalServerErrorResponse(res, err.message);
+    }
+}
+
+async function getMyAlbums(req: Request, res: Response) {
+    try {
+        const user = req.user;
+        const albums = await album_service.getMyAlbums(user.user_id);
+        if (!albums) return response_service.notFoundResponse(res, 'Albums not found.');
+        return response_service.successResponse(res, 'Albums fetched successfully.', albums);
+    }
+    catch (err: any) {
+        logger.error('Error fetching albums:', err);
+        return response_service.internalServerErrorResponse(res, err.message);
+    }
+}
+
+async function getFavoriteAlbums(req: Request, res: Response) {
+    try {
+        const user = req.user;
+        const albums = await album_service.getFavoriteAlbums(user.user_id, req.body.page, req.body.limit);
+        if (!albums) return response_service.notFoundResponse(res, 'Albums not found.');
+        return response_service.successResponse(res, 'Albums fetched successfully.', albums);
+    }
+    catch (err: any) {
+        logger.error('Error fetching albums:', err);
+        return response_service.internalServerErrorResponse(res, err.message);
+    }
+}
+
+async function deleteAlbum(req: Request, res: Response) {
+    try {
+        const albumId = req.body.album_id;
+        const album = await album_service.getAlbum({
+            album_id: albumId
+        });
+        if (!album) return response_service.notFoundResponse(res, 'Album not found.');
+        const result = await album_service.deleteAlbum(albumId);
+        if (!result) return response_service.badRequestResponse(res, 'Failed to delete album.');
+        return response_service.successResponse(res, 'Album deleted successfully.');
+    }
+    catch (err: any) {
+        logger.error('Error deleting album:', err);
         return response_service.internalServerErrorResponse(res, err.message);
     }
 }
@@ -197,5 +284,9 @@ export {
     addSongsToAlbum,
     removeSongsFromAlbum,
     getAlbum,
-    getAllAlbums
+    getAllAlbums,
+    setfavorite,
+    getMyAlbums,
+    getFavoriteAlbums,
+    deleteAlbum
 };
