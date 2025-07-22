@@ -167,3 +167,25 @@ export interface IMovie {
     createdAt?: Date;
     updatedAt?: Date;
 }
+
+export interface IAds {
+    ad_id: string;
+    title: string;
+    type: string;
+    banner: string;
+    video: string;
+    audio: string;
+    description: string;
+    link: string;
+    start_date: string;
+    end_date: string;
+    position: string;
+    placement: string;
+    duration: number;
+    is_deleted: boolean;
+    is_visible: boolean;
+    order_id: number;
+    album_ids: number[];
+    createdAt?: Date;
+    updatedAt?: Date;
+}

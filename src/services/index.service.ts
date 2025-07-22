@@ -13,6 +13,7 @@ import explore_service from './explore.service';
 import movie_service from './movie.service';
 import { getAllAvatars } from './avatar.service';
 import searchHistory_service from './searchHistory.service';
+import ad_service from './ad.service';
 
 export {
     response_service,
@@ -29,5 +30,6 @@ export {
     dashboard_service,
     movie_service,
     getAllAvatars,
-    searchHistory_service
+    searchHistory_service,
+    ad_service
 };

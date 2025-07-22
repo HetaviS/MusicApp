@@ -26,6 +26,15 @@ const storage = multer.diskStorage({
             case 'genre_background_img':
                 cb(null, 'uploads/genre_background_img/');
                 break;
+            case 'ad_banner':
+                cb(null, 'uploads/ad_banner/');
+                break;
+            case 'ad_video':
+                cb(null, 'uploads/ad_video/');
+                break;
+            case 'ad_audio':
+                cb(null, 'uploads/ad_audio/');
+                break;
             default:
                 cb(null, 'uploads/anonymous/');
                 break;
@@ -46,6 +55,7 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
     const fieldname = file.fieldname;
     let allowedAudioTypes;
     let allowedImageTypes;
+    let allowedVideoTypes;
     switch (fieldname) {
         case 'audio':
             allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3'];
@@ -94,6 +104,31 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
             } else {
                 cb(new Error('Invalid image file type.'));
             }
+            break;
+        case 'ad_banner':
+            allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            if (allowedImageTypes.includes(file.mimetype)) {
+                cb(null, true);
+            } else {
+                cb(new Error('Invalid image file type.'));
+            }
+            break;
+        case 'ad_video':
+            allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+            if (allowedVideoTypes.includes(file.mimetype)) {
+                cb(null, true);
+            } else {
+                cb(new Error('Invalid video file type.'));
+            }
+            break;
+        case 'ad_audio':
+            allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/mp3'];
+            if (allowedAudioTypes.includes(file.mimetype)) {
+                cb(null, true);
+            } else {
+                cb(new Error('Invalid audio file type.'));
+            }
+            break;
         default:
             cb(new Error('Unexpected file field.'));
             break;
@@ -119,7 +154,10 @@ export const uploadDocs = (req: Request, res: Response, next: NextFunction) => {
         { name: 'album_thumbnail', maxCount: 1 },
         { name: 'profile_pic', maxCount: 1 },
         { name: 'poster', maxCount: 1 },
-        { name: 'genre_background_img', maxCount: 1 }
+        { name: 'genre_background_img', maxCount: 1 },
+        { name: 'ad_banner', maxCount: 1 },
+        { name: 'ad_video', maxCount: 1 },
+        { name: 'ad_audio', maxCount: 1 }
     ]);
     uploadFields(req, res, (err: any) => {
         if (err instanceof multer.MulterError) {
