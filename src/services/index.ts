@@ -14,6 +14,7 @@ import movie_service from './movie.service';
 import { getAllAvatars } from './avatar.service';
 import searchHistory_service from './searchHistory.service';
 import ad_service from './ad.service';
+import config_service from './config.service';
 
 export {
     response_service,
@@ -31,5 +32,6 @@ export {
     movie_service,
     getAllAvatars,
     searchHistory_service,
-    ad_service
+    ad_service,
+    config_service
 };

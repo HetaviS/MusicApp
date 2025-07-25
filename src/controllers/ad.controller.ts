@@ -1,4 +1,4 @@
-import { ad_service, response_service } from "../services/index.service";
+import { ad_service, response_service } from "../services";
 import { Request, Response } from "express";
 import { logger } from "../utils";
 import dayjs from "dayjs";

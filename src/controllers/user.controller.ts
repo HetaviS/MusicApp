@@ -1,8 +1,4 @@
-import {
-  user_service,
-  response_service,
-  history_service,
-} from "../services/index.service";
+import { user_service, response_service, history_service } from "../services";
 import { Request, Response } from "express";
 import { logger } from "../utils";
 import removeExtraFields from "../services/common/removeExtraFields.service";
