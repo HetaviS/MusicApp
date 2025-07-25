@@ -15,6 +15,7 @@ import { favoriteAlbums } from './favoriteAlbums';
 import { favoriteArtists } from './favoriteArtitsts';
 import { SearchHistory } from './searchHistory';
 import { Ads } from './ads';
+import { Config } from './config';
 
 export {
     User,
@@ -33,5 +34,6 @@ export {
     favoriteAlbums,
     favoriteArtists,
     SearchHistory,
-    Ads
+    Ads,
+    Config
 };
