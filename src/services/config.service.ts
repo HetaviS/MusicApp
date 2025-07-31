@@ -2,7 +2,9 @@ import { Config } from "../models";
 
 async function createConfig(payload: any): Promise<any> {
   try {
-    const config = await Config.create(payload);
+    let config = await Config.findOne();
+    if (config) return config.toJSON();
+    config = await Config.create(payload);
     return config.toJSON();
   } catch (err) {
     throw err;

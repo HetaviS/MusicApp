@@ -189,3 +189,22 @@ export interface IAds {
     createdAt?: Date;
     updatedAt?: Date;
 }
+
+
+export interface ISubscriptionPlans {
+    plan_id: string;
+    title: string;
+    description: string;
+    price: number;
+    duration: string;
+    inclusions: IPlanInclusions[];
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export interface IPlanInclusions {
+    inclusion_id: string;
+    description: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+}

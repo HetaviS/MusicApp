@@ -15,6 +15,8 @@ import { getAllAvatars } from './avatar.service';
 import searchHistory_service from './searchHistory.service';
 import ad_service from './ad.service';
 import config_service from './config.service';
+import subscription_service from './subscription.service';
+import subscripiton_insclusions_service from './subscripiton_insclusions.service';
 
 export {
     response_service,
@@ -33,5 +35,7 @@ export {
     getAllAvatars,
     searchHistory_service,
     ad_service,
-    config_service
+    config_service,
+    subscription_service,
+    subscripiton_insclusions_service
 };

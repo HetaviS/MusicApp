@@ -16,6 +16,9 @@ import { favoriteArtists } from './favoriteArtitsts';
 import { SearchHistory } from './searchHistory';
 import { Ads } from './ads';
 import { Config } from './config';
+import { SunscriptionPlans } from './subscriptionPlans';
+import { PlanInclusions } from './planInclusions';
+import { SubscriptionInclusionsAssociation } from './subscriptionInclusionsAssociation';
 
 export {
     User,
@@ -35,5 +38,8 @@ export {
     favoriteArtists,
     SearchHistory,
     Ads,
-    Config
+    Config,
+    SunscriptionPlans,
+    PlanInclusions,
+    SubscriptionInclusionsAssociation
 };

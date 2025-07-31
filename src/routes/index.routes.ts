@@ -13,6 +13,7 @@ import { uploadDocs } from '../middleware/upload.middleware';
 import artist_routes from './artist.routes';
 import searchHistory_routes from './searchHistory.routes';
 import ad_routes from './ad.routes';
+import subscription_routes from './subscription.routes';
 
 const router = Router();
 
@@ -31,4 +32,5 @@ router.use('/movie', movie_routes);
 router.use('/artist', artist_routes);
 router.use('/search-history', searchHistory_routes);
 router.use('/ad', ad_routes);
+router.use('/subscription', subscription_routes);
 export default router;
